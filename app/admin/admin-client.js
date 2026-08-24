@@ -157,7 +157,7 @@ export function AdminPanel({teams}){
  <div className="qaTop"><div><b>Inspect SportsBettingDime win totals</b><div className="muted">Parses team total, Over/Under prices and a vig-adjusted expected-win estimate without changing production projections.</div></div><button className="button" onClick={inspectWinTotals}>Inspect Win Totals</button></div>
  {winTotalsInspect?.ok&&<div className="qaList">
   <div className="qaRow"><span className={'qaBadge '+(winTotalsInspect.safeToUse?'pass':'warning')}>{winTotalsInspect.safeToUse?'PASS':'CHECK'}</span><div><b>{winTotalsInspect.matchedTeams} of 138 FBS teams matched</b><div className="muted">{winTotalsInspect.parsedRows} source rows parsed</div></div></div>
-  <div className="qaRow"><span className="qaBadge info">INFO</span><div><b>Missing FBS teams</b><div className="muted wrapText">{winTotalsInspect.missingTeams?.join(' · ')||'None'}</div></div></div>
+  <div className="qaRow"><span className="qaBadge info">INFO</span><div><b>Missing FBS teams</b><div className="muted wrapText">{winTotalsInspect.missingTeams?.join(' · ')||'None'}</div></div></div><div className="qaRow"><span className="qaBadge info">INFO</span><div><b>Unmatched source names</b><div className="muted wrapText">{winTotalsInspect.unmatchedSourceNames?.join(' · ')||'None'}</div></div></div>
   <div className="sdioShape"><b>Sample matched totals</b>{(winTotalsInspect.samples||[]).map((x,i)=><div className="muted" key={i}>{x.school}: {x.line} · O {x.over>0?'+':''}{x.over} / U {x.under>0?'+':''}{x.under} · adjusted {Number(x.adjustedWins).toFixed(2)}</div>)}</div>
  </div>}
  {winTotalsInspect&&!winTotalsInspect.ok&&<div className="notice">{winTotalsInspect.error}</div>}

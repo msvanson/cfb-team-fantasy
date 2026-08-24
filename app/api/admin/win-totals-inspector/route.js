@@ -5,9 +5,14 @@ import {createClient} from '@supabase/supabase-js';
 const supabase=createClient(process.env.NEXT_PUBLIC_SUPABASE_URL,process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,{auth:{persistSession:false}});
 const URL='https://www.sportsbettingdime.com/college-football/futures/win-totals-best-odds/';
 const alias={
- 'appalachian state':'app state','miami fl':'miami','miami florida':'miami','miami oh':'miami (oh)',
- 'southern miss':'southern mississippi','connecticut':'uconn','massachusetts':'umass',
- 'louisiana monroe':'ulm','ul monroe':'ulm','florida international':'fiu','north carolina state':'nc state'
+ 'appalachian state':'app state','app state':'appalachian state',
+ 'miami fl':'miami','miami florida':'miami','miami oh':'miami (oh)','miami ohio':'miami (oh)',
+ 'southern miss':'southern mississippi','southern mississippi':'southern miss',
+ 'connecticut':'uconn','uconn':'connecticut','massachusetts':'umass','umass':'massachusetts',
+ 'louisiana monroe':'ulm','ul monroe':'ulm','florida international':'fiu',
+ 'north carolina state':'nc state','nc state':'north carolina state',
+ 'texas aandm':'texas a m','texas am':'texas a m','air force academy':'air force',
+ 'north dakota st':'north dakota state','ndsu':'north dakota state'
 };
 const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]+/g,' ').trim();
 const americanProb=a=>{a=Number(a);return a<0?(-a)/((-a)+100):100/(a+100)};
@@ -36,12 +41,26 @@ export async function GET(){
   const html=await r.text(),parsed=parse(html);
   const {data:teams,error}=await supabase.from('team_directory').select('team_id,school').eq('season_id',1);
   if(error)throw error;
-  const byName=new Map(teams.map(t=>[norm(t.school),t]));
+  const namesForTeam=t=>{
+    const base=norm(t.school), out=new Set([base]);
+    if(alias[base])out.add(alias[base]);
+    for(const [a,b] of Object.entries(alias))if(b===base)out.add(a);
+    return [...out];
+  };
+  const teamNames=teams.map(t=>({t,names:namesForTeam(t)}));
   const matched=[],unmatched=[];
   for(const x of parsed){
-   let n=norm(x.team);n=alias[n]||n;
-   let t=byName.get(n);
-   if(!t){for(const [ln,lt] of byName){if(n.length>4&&(ln===n||ln.startsWith(n+' ')||n.startsWith(ln+' '))){t=lt;break}}}
+   const raw=norm(x.team);
+   const candidates=new Set([raw,alias[raw]].filter(Boolean));
+   let t=null;
+   for(const row of teamNames){
+     if(row.names.some(n=>candidates.has(n))){t=row.t;break}
+   }
+   if(!t){
+     for(const row of teamNames){
+       if(row.names.some(n=>raw.length>4&&(n.startsWith(raw+' ')||raw.startsWith(n+' ')))){t=row.t;break}
+     }
+   }
    if(t&&!matched.some(y=>y.teamId===t.team_id))matched.push({...x,teamId:t.team_id,school:t.school});
    else if(!t)unmatched.push(x.team);
   }
