@@ -23,6 +23,11 @@ export async function GET(request) {
     supabaseUrlPresent: hasSupabaseUrl,
     supabasePublishableKeyPresent: hasSupabaseKey,
     vercelEnvironment: process.env.VERCEL_ENV || null,
+    nodeEnvironment: process.env.NODE_ENV || null,
+    runtimeRegion: process.env.VERCEL_REGION || null,
+    syncSecretLength: process.env.CFB_SYNC_SECRET?.length || 0,
+    cfbdApiKeyLength: process.env.CFBD_API_KEY?.length || 0,
+    deploymentIdPresent: Boolean(process.env.VERCEL_DEPLOYMENT_ID),
   };
 
   let sync = null;

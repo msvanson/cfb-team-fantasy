@@ -64,6 +64,11 @@ export default function LiveClient() {
         <StatusLine label="Supabase URL available" value={d.supabaseUrlPresent} />
         <StatusLine label="Supabase publishable key available" value={d.supabasePublishableKeyPresent} />
         <div className="diag-row"><span>Vercel environment</span><strong>{d.vercelEnvironment || 'unknown'}</strong></div>
+        <div className="diag-row"><span>Node environment</span><strong>{d.nodeEnvironment || 'unknown'}</strong></div>
+        <div className="diag-row"><span>Vercel region</span><strong>{d.runtimeRegion || 'unknown'}</strong></div>
+        <div className="diag-row"><span>CFBD key length (value hidden)</span><strong>{d.cfbdApiKeyLength ?? 0}</strong></div>
+        <div className="diag-row"><span>Sync secret length (value hidden)</span><strong>{d.syncSecretLength ?? 0}</strong></div>
+        <StatusLine label="Vercel deployment ID present" value={d.deploymentIdPresent} />
         <div className="diag-row"><span>Sync claimed / result</span><strong>{data.sync ? JSON.stringify(data.sync) : 'none'}</strong></div>
       </details>
     </div>
