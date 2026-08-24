@@ -38,3 +38,15 @@
 .wrapText{white-space:normal;overflow-wrap:anywhere;line-height:1.45}
 
 .projectionSmall{display:block;font-size:11px;color:var(--muted);font-weight:700;margin-top:2px}
+
+.projectionNote{padding:10px 12px;border:1px solid var(--line);border-radius:10px;color:var(--muted);font-size:12px;line-height:1.45}
+.projectionNote b{color:var(--text)}
+.ownerScorePair{display:flex;gap:14px;align-items:flex-end}
+.ownerScorePair>div{display:grid;justify-items:end}
+.ownerScorePair small,.rosterProjectionStats small{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.ownerScorePair b{font-size:22px;line-height:1.05}
+.rosterProjectionStats{display:grid;grid-template-columns:auto auto;column-gap:12px;row-gap:2px;justify-items:end;align-items:end}
+.rosterProjectionStats>span{display:grid;justify-items:end}
+.rosterProjectionStats>span b{font-size:15px}
+.rosterRecord{grid-column:1/-1;text-transform:none!important;letter-spacing:0!important}
+@media(max-width:640px){.ownerScorePair{gap:10px}.ownerScorePair b{font-size:19px}.rosterProjectionStats{column-gap:8px}}

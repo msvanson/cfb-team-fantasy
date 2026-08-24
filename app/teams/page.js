@@ -17,12 +17,12 @@ export default async function Page(){
     <div className="topbar">
       <div>
         <div className="brand">Teams / Waiver Wire</div>
-        <div className="sub">All 138 FBS teams, grouped by conference</div>
+        <div className="sub">All 138 FBS teams with live results and market-based season projections</div>
       </div>
       <div className="pill">{data.filter(x=>!x.is_owned).length} Free Agents</div>
     </div>
 
-    <Nav/>
+    <Nav/><section className="section"><div className="projectionNote"><b>Projected Final</b> = expected end-of-season fantasy points. Projections refresh every Sunday at 5:00 AM ET and are designed to help compare rostered teams with waiver options.</div></section>
 
     {Object.entries(groups).map(([code,ts])=>
       <section className="section" key={code}>
