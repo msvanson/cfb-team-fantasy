@@ -133,14 +133,11 @@ export function AdminPanel({teams}){
         </div>
 
         {sdio.structure ? <>
-          <div className="qaRow"><span className="qaBadge pass">INFO</span><div><b>Betting markets found</b><div className="muted">{sdio.structure.marketCount??0} markets · {sdio.structure.outcomeCount??0} outcomes</div></div></div>
-          <div className="qaRow"><span className="qaBadge pass">INFO</span><div><b>Market names / labels</b><div className="muted wrapText">{(sdio.structure.marketLabels||[]).join(' · ')||'—'}</div></div></div>
-          <div className="qaRow"><span className="qaBadge pass">INFO</span><div><b>Market types</b><div className="muted wrapText">{(sdio.structure.marketTypes||[]).join(', ')||'—'}</div></div></div>
-          <div className="qaRow"><span className="qaBadge pass">INFO</span><div><b>Bet types</b><div className="muted wrapText">{(sdio.structure.betTypes||[]).join(', ')||'—'}</div></div></div>
-          <div className="qaRow"><span className="qaBadge pass">INFO</span><div><b>BettingOutcome fields</b><div className="muted wrapText">{(sdio.structure.outcomeFields||[]).join(', ')||'—'}</div></div></div>
-          <div className="qaRow"><span className="qaBadge pass">INFO</span><div><b>Outcome/team labels sampled</b><div className="muted wrapText">{(sdio.structure.outcomeLabels||[]).join(', ')||'—'}</div></div></div>
-          <div className="qaRow"><span className="qaBadge pass">INFO</span><div><b>Sportsbooks found</b><div className="muted wrapText">{(sdio.structure.sportsbooks||[]).join(', ')||'—'}</div></div></div>
-          {Object.entries(sdio.structure.detected||{}).map(([k,v])=><div className="qaRow" key={k}><span className={'qaBadge '+(v?'pass':'warning')}>{v?'FOUND':'CHECK'}</span><div><b>{k.replace(/([A-Z])/g,' $1')}</b></div></div>)}
+          <div className="qaRow"><span className="qaBadge pass">INFO</span><div><b>Relevant markets</b><div className="muted">{sdio.structure.relevantMarketCount??0} projection markets found</div></div></div>
+          <div className="qaRow"><span className="qaBadge pass">INFO</span><div><b>Relevant bet types</b><div className="muted wrapText">{(sdio.structure.relevantBetTypes||[]).join(' · ')||'—'}</div></div></div>
+          <div className="qaRow"><span className="qaBadge pass">INFO</span><div><b>BettingOutcome fields</b><div className="muted wrapText">{(sdio.structure.bettingOutcomeFields||[]).join(', ')||'—'}</div></div></div>
+          <div className="qaRow"><span className="qaBadge pass">INFO</span><div><b>ConsensusOutcome fields</b><div className="muted wrapText">{(sdio.structure.consensusOutcomeFields||[]).join(', ')||'—'}</div></div></div>
+          <div className="sdioShape"><b>Targeted market samples</b>{(sdio.structure.samples||[]).map((m,i)=><div className="card" key={i}><div><b>{m.betType||m.name||'Market'}</b>{m.teamKey?` · ${m.teamKey}`:''}</div><div className="muted">Betting outcomes: {m.bettingOutcomeCount} · Consensus outcomes: {m.consensusOutcomeCount}</div><div className="muted wrapText">Consensus: {JSON.stringify(m.consensusOutcomes)}</div><div className="muted wrapText">Book sample: {JSON.stringify(m.bettingOutcomes)}</div></div>)}</div>
         </> : sdio.ok ? <div className="notice">No nested structure returned.</div> : null}
 
         {sdio.error&&<div className="notice">{sdio.error}</div>}
