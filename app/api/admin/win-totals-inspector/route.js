@@ -12,7 +12,7 @@ const alias={
  'louisiana monroe':'ulm','ul monroe':'ulm','florida international':'fiu',
  'north carolina state':'nc state','nc state':'north carolina state',
  'texas aandm':'texas a m','texas am':'texas a m','air force academy':'air force',
- 'north dakota st':'north dakota state','ndsu':'north dakota state'
+ 'north dakota st':'north dakota state','ndsu':'north dakota state','state':'nc state','conn':'uconn','mass':'umass'
 };
 const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/&/g,'and').replace(/[^a-z0-9]+/g,' ').trim();
 const americanProb=a=>{a=Number(a);return a<0?(-a)/((-a)+100):100/(a+100)};
@@ -21,15 +21,42 @@ function adjusted(line,over,under){
  // Half-point markets: convert market lean into a modest +/-0.25 expected-win adjustment.
  return Math.max(0,Math.min(12,Number(line)+(p-.5)*.5));
 }
+function clean(v){
+ return String(v||'').replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/&amp;/g,'&')
+  .replace(/&#8211;|&ndash;/g,'-').replace(/&#43;/g,'+').replace(/&#39;|&apos;/g,"'")
+  .replace(/\s+/g,' ').trim();
+}
 function parse(html){
- const text=html.replace(/<script[\s\S]*?<\/script>/gi,' ').replace(/<style[\s\S]*?<\/style>/gi,' ').replace(/<[^>]+>/g,' ').replace(/&nbsp;/g,' ').replace(/&#8211;|&ndash;/g,'-').replace(/&#43;/g,'+').replace(/\s+/g,' ');
  const rows=[];
- const re=/([A-Za-z][A-Za-z .&'()-]{1,40})\s+(\d{1,2}(?:\.5)?)\s+([+-]\d{2,4})\s+([+-]\d{2,4})/g;
+ const trRe=/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi;
+ let tr;
+ while((tr=trRe.exec(html))){
+   const cells=[];
+   const tdRe=/<t[dh]\b[^>]*>([\s\S]*?)<\/t[dh]>/gi;
+   let td;
+   while((td=tdRe.exec(tr[1])))cells.push(clean(td[1]));
+   if(cells.length<4)continue;
+   const joined=cells.join(' | ');
+   if(/win total/i.test(joined)&&/over/i.test(joined)&&/under/i.test(joined))continue;
+   let team=cells[0], line=null, over=null, under=null;
+   for(let i=1;i<cells.length;i++){
+     const c=cells[i];
+     if(line===null&&/^\d{1,2}(?:\.5)?$/.test(c))line=Number(c);
+     else if(line!==null&&over===null&&/^[+-]\d{2,4}$/.test(c))over=Number(c);
+     else if(line!==null&&over!==null&&under===null&&/^[+-]\d{2,4}$/.test(c)){under=Number(c);break}
+   }
+   if(team&&line!==null&&over!==null&&under!==null&&line>=0&&line<=12)
+     rows.push({team,line,over,under,adjustedWins:adjusted(line,over,under)});
+ }
+ if(rows.length>=100)return rows;
+
+ const text=clean(html.replace(/<script[\s\S]*?<\/script>/gi,' ').replace(/<style[\s\S]*?<\/style>/gi,' '));
+ const re=/([A-Za-z][A-Za-z .&'()-]{1,40}?)\s+(\d{1,2}(?:\.5)?)\s+([+-]\d{2,4})\s+([+-]\d{2,4})/g;
  let m;
  while((m=re.exec(text))){
-  const team=m[1].trim().replace(/^.*?(?=[A-Z][a-z])/,'').trim();
-  const line=Number(m[2]),over=Number(m[3]),under=Number(m[4]);
-  if(line>=0&&line<=12)rows.push({team,line,over,under,adjustedWins:adjusted(line,over,under)});
+   const team=m[1].trim().replace(/^(?:Win Total Over Odds Under Odds)\s*/i,'').trim();
+   const line=Number(m[2]),over=Number(m[3]),under=Number(m[4]);
+   if(line>=0&&line<=12)rows.push({team,line,over,under,adjustedWins:adjusted(line,over,under)});
  }
  return rows;
 }
