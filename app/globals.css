@@ -25,3 +25,5 @@
 .scoringGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.scoringRule{display:flex;justify-content:space-between;align-items:center;gap:12px}.rulePoints{font-size:28px;font-weight:900}
 
 .adminHealth{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:18px}@media(max-width:640px){.adminHealth{grid-template-columns:1fr}}
+
+.scoringGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.scoringRule{display:flex;justify-content:space-between;align-items:center;gap:12px}.rulePoints{font-size:26px;font-weight:900}.historyRecords{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}.historyTeam{font-size:24px}
