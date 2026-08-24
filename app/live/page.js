@@ -1,1 +1,11 @@
-import {Nav} from '../nav';export default function Page(){return <main className="shell"><div className="topbar"><div><div className="brand">Live Scores</div><div className="sub">Drafted-team games and fantasy impact</div></div></div><Nav/><div className="card liveEmpty section"><h2>Ready for CollegeFootballData</h2><p>Once the API key is connected, this page will show live scores, game status, owners, official points, and projected live points.</p></div></main>}
+import LiveClient from './live-client';
+
+export const dynamic = 'force-dynamic';
+
+export default function LivePage(){
+  return <main>
+    <h1>Live Scores</h1>
+    <p className="muted">Drafted-team games refresh automatically while this page is open. Official fantasy points are awarded only when a game is final.</p>
+    <LiveClient />
+  </main>;
+}
