@@ -29,3 +29,5 @@
 .scoringGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}.scoringRule{display:flex;justify-content:space-between;align-items:center;gap:12px}.rulePoints{font-size:26px;font-weight:900}.historyRecords{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}.historyTeam{font-size:24px}
 
 .recordValue{font-size:30px;font-weight:900;margin:8px 0}.weeklyCards{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
+
+.qaTop{display:flex;justify-content:space-between;align-items:center;gap:12px}.qaTime{margin:10px 0}.qaList{display:grid;gap:8px;margin-top:12px}.qaRow{display:flex;align-items:flex-start;gap:10px;padding:10px;border-top:1px solid var(--line)}.qaBadge{min-width:70px;text-align:center;padding:4px 7px;border-radius:999px;font-size:11px;font-weight:900;border:1px solid var(--line)}.qaBadge.pass{background:#10251b}.qaBadge.warning{background:#3b2f0d}.qaBadge.fail{background:#3a1118}@media(max-width:640px){.qaTop{align-items:flex-start;flex-direction:column}}
