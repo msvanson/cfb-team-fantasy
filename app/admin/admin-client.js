@@ -5,18 +5,37 @@ export function Login(){
   const [password,setPassword]=useState(''); const [msg,setMsg]=useState('');const [qa,setQa]=useState(null);const [sdio,setSdio]=useState(null);
   async function submit(e){e.preventDefault();setMsg('Signing in…');const r=await fetch('/api/admin/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password})});const j=await r.json();if(r.ok)location.reload();else setMsg(j.error||'Login failed')}
   return <div className="card adminLogin"><h2>Commissioner Login</h2><p className="muted">This page is hidden from public navigation.</p><form onSubmit={submit}><input className="field" type="password" placeholder="Commissioner password" value={password} onChange={e=>setPassword(e.target.value)}/><button className="button" type="submit">Sign in</button></form>{msg&&<div className="notice">{msg}</div>}
-    <div className="sectionTitle"><h2>SportsDataIO Futures</h2><span className="muted">2026 projection feed diagnostic</span></div><div className="card"><div className="qaTop"><div><b>Inspect 2026 futures markets</b><div className="muted">Checks availability without displaying your API key.</div></div><button className="button" onClick={checkSportsData}>Check Futures</button></div>{sdio&&<div className="qaList"><div className="qaRow"><span className={'qaBadge '+(sdio.keyVisible?'pass':'fail')}>{sdio.keyVisible?'PASS':'FAIL'}</span><div><b>API key visible</b></div></div>{sdio.ok&&Object.entries(sdio.markets||{}).map(([k,v])=><div className="qaRow" key={k}><span className={'qaBadge '+(v?'pass':'warning')}>{v?'FOUND':'CHECK'}</span><div><b>{k.replace(/([A-Z])/g,' $1')}</b></div></div>)}{sdio.rowCount!=null&&<div className="muted">Rows returned: {sdio.rowCount} · Endpoint: {sdio.endpoint}</div>}
-{sdio.structure&&<div className="sdioShape">
-  <div><b>Betting markets found</b><div className="muted">{sdio.structure.marketCount??0} markets · {sdio.structure.outcomeCount??0} outcomes</div></div>
-  <div><b>Market names / labels</b><div className="muted wrapText">{sdio.structure.marketLabels?.join(' · ')||'—'}</div></div>
-  <div><b>Market types</b><div className="muted wrapText">{sdio.structure.marketTypes?.join(', ')||'—'}</div></div>
-  <div><b>Bet types</b><div className="muted wrapText">{sdio.structure.betTypes?.join(', ')||'—'}</div></div>
-  <div><b>BettingOutcome fields</b><div className="muted wrapText">{sdio.structure.outcomeFields?.join(', ')||'—'}</div></div>
-  <div><b>Outcome/team labels sampled</b><div className="muted wrapText">{sdio.structure.outcomeLabels?.join(', ')||'—'}</div></div>
-  <div><b>Sportsbooks found</b><div className="muted wrapText">{sdio.structure.sportsbooks?.join(', ')||'—'}</div></div>
-  {Object.entries(sdio.structure.detected||{}).map(([k,v])=><div className="qaRow" key={k}><span className={'qaBadge '+(v?'pass':'warning')}>{v?'FOUND':'CHECK'}</span><div><b>{k.replace(/([A-Z])/g,' $1')}</b></div></div>)}
- </div>}
-{sdio.error&&<div className="notice">{sdio.error}</div>}</div>}</div><div className="sectionTitle"><h2>Preseason QA</h2><span className="muted">Production integrity checks</span></div>
+    <div className="sectionTitle"><h2>SportsDataIO Futures</h2><span className="muted">2026 projection feed diagnostic</span></div>
+<div className="card">
+  <div className="qaTop">
+    <div>
+      <b>Inspect 2026 futures markets</b>
+      <div className="muted">Checks nested market and outcome structure without displaying your API key.</div>
+    </div>
+    <button className="button" onClick={checkSportsData}>Check Futures</button>
+  </div>
+
+  {sdio&&<div className="qaList">
+    <div className="qaRow">
+      <span className={'qaBadge '+(sdio.keyVisible?'pass':'fail')}>{sdio.keyVisible?'PASS':'FAIL'}</span>
+      <div><b>API key visible</b><div className="muted">{sdio.keyVisible?'Server can access the key.':'Key is not available to this deployment.'}</div></div>
+    </div>
+
+    {sdio.structure&&<>
+      <div className="qaRow"><span className="qaBadge pass">INFO</span><div><b>Betting markets found</b><div className="muted">{sdio.structure.marketCount??0} markets · {sdio.structure.outcomeCount??0} outcomes</div></div></div>
+      <div className="qaRow"><span className="qaBadge pass">INFO</span><div><b>Market names / labels</b><div className="muted wrapText">{sdio.structure.marketLabels?.join(' · ')||'—'}</div></div></div>
+      <div className="qaRow"><span className="qaBadge pass">INFO</span><div><b>Market types</b><div className="muted wrapText">{sdio.structure.marketTypes?.join(', ')||'—'}</div></div></div>
+      <div className="qaRow"><span className="qaBadge pass">INFO</span><div><b>Bet types</b><div className="muted wrapText">{sdio.structure.betTypes?.join(', ')||'—'}</div></div></div>
+      <div className="qaRow"><span className="qaBadge pass">INFO</span><div><b>BettingOutcome fields</b><div className="muted wrapText">{sdio.structure.outcomeFields?.join(', ')||'—'}</div></div></div>
+      <div className="qaRow"><span className="qaBadge pass">INFO</span><div><b>Outcome/team labels sampled</b><div className="muted wrapText">{sdio.structure.outcomeLabels?.join(', ')||'—'}</div></div></div>
+      <div className="qaRow"><span className="qaBadge pass">INFO</span><div><b>Sportsbooks found</b><div className="muted wrapText">{sdio.structure.sportsbooks?.join(', ')||'—'}</div></div></div>
+      {Object.entries(sdio.structure.detected||{}).map(([k,v])=><div className="qaRow" key={k}><span className={'qaBadge '+(v?'pass':'warning')}>{v?'FOUND':'CHECK'}</span><div><b>{k.replace(/([A-Z])/g,' $1')}</b></div></div>)}
+    </>}
+
+    {sdio.error&&<div className="notice">{sdio.error}</div>}
+  </div>}
+</div>
+<div className="sectionTitle"><h2>Preseason QA</h2><span className="muted">Production integrity checks</span></div>
     <div className="card">
       <div className="qaTop"><div><b>Run full system check</b><div className="muted">Owners, rosters, season guard, scoring, Tier 1, standings and sync health.</div></div><button className="button" onClick={runQa}>Run QA</button></div>
       {qa?.checkedAt&&<div className="muted qaTime">Last checked: {new Date(qa.checkedAt).toLocaleString()}</div>}
