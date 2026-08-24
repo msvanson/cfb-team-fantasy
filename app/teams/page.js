@@ -1,2 +1,63 @@
-import Link from 'next/link';import {Nav} from '../nav';import {getTeamDirectory,getLatestTeamProjections} from '../../lib/data';export const dynamic='force-dynamic';
-export default async function Page(){const data=await getTeamDirectory,getLatestTeamProjections();const groups=data.reduce((a,x)=>((a[x.conference_code]??=[]).push(x),a),{});return <main className="shell"><div className="topbar"><div><div className="brand">Teams / Waiver Wire</div><div className="sub">All 138 FBS teams, grouped by conference</div></div><div className="pill">{data.filter(x=>!x.is_owned).length} Free Agents</div></div><Nav/>{Object.entries(groups).map(([code,ts])=><section className="section" key={code}><div className="sectionTitle"><h2>{ts[0]?.conference_name||code}</h2><span className="muted">{ts.filter(x=>!x.is_owned).length} available</span></div><div className="tableWrap"><table className="table"><thead><tr><th>Team</th><th>Record</th><th>Pt Diff</th><th>Fantasy</th><th>Projected</th><th>Status</th></tr></thead><tbody>{ts.map(t=><tr key={t.team_id}><td><Link className="teamLink" href={`/teams/${t.team_id}`}><b>{t.school}</b></Link></td><td>{t.wins}-{t.losses}</td><td>{t.point_differential>0?'+':''}{t.point_differential}</td><td>{t.fantasy_points}</td><td>{pm.has(t.team_id)?Number(pm.get(t.team_id)).toFixed(1):'—'}</td><td><span className={'pill '+(t.is_owned?'owned':'free')}>{t.is_owned?`Owned · ${t.owner_name}`:'Free Agent'}</span></td></tr>)}</tbody></table></div></section>)}</main>}
+import Link from 'next/link';
+import {Nav} from '../nav';
+import {getTeamDirectory,getLatestTeamProjections} from '../../lib/data';
+
+export const dynamic='force-dynamic';
+
+export default async function Page(){
+  const [data,projections]=await Promise.all([
+    getTeamDirectory(),
+    getLatestTeamProjections()
+  ]);
+
+  const pm=new Map(projections.map(x=>[x.team_id,x.projected_points]));
+  const groups=data.reduce((a,x)=>((a[x.conference_code]??=[]).push(x),a),{});
+
+  return <main className="shell">
+    <div className="topbar">
+      <div>
+        <div className="brand">Teams / Waiver Wire</div>
+        <div className="sub">All 138 FBS teams, grouped by conference</div>
+      </div>
+      <div className="pill">{data.filter(x=>!x.is_owned).length} Free Agents</div>
+    </div>
+
+    <Nav/>
+
+    {Object.entries(groups).map(([code,ts])=>
+      <section className="section" key={code}>
+        <div className="sectionTitle">
+          <h2>{ts[0]?.conference_name||code}</h2>
+          <span className="muted">{ts.filter(x=>!x.is_owned).length} available</span>
+        </div>
+
+        <div className="tableWrap">
+          <table className="table">
+            <thead>
+              <tr>
+                <th>Team</th>
+                <th>Record</th>
+                <th>Pt Diff</th>
+                <th>Fantasy</th>
+                <th>Projected</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ts.map(t=>
+                <tr key={t.team_id}>
+                  <td><Link className="teamLink" href={`/teams/${t.team_id}`}><b>{t.school}</b></Link></td>
+                  <td>{t.wins}-{t.losses}</td>
+                  <td>{t.point_differential>0?'+':''}{t.point_differential}</td>
+                  <td>{t.fantasy_points}</td>
+                  <td>{pm.has(t.team_id)?Number(pm.get(t.team_id)).toFixed(1):'—'}</td>
+                  <td><span className={'pill '+(t.is_owned?'owned':'free')}>{t.is_owned?`Owned · ${t.owner_name}`:'Free Agent'}</span></td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    )}
+  </main>
+}
