@@ -2,10 +2,10 @@
 import { useEffect,useState } from 'react';
 
 export function Login(){
-  const [password,setPassword]=useState(''); const [msg,setMsg]=useState('');const [qa,setQa]=useState(null);
+  const [password,setPassword]=useState(''); const [msg,setMsg]=useState('');const [qa,setQa]=useState(null);const [sdio,setSdio]=useState(null);
   async function submit(e){e.preventDefault();setMsg('Signing in…');const r=await fetch('/api/admin/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password})});const j=await r.json();if(r.ok)location.reload();else setMsg(j.error||'Login failed')}
   return <div className="card adminLogin"><h2>Commissioner Login</h2><p className="muted">This page is hidden from public navigation.</p><form onSubmit={submit}><input className="field" type="password" placeholder="Commissioner password" value={password} onChange={e=>setPassword(e.target.value)}/><button className="button" type="submit">Sign in</button></form>{msg&&<div className="notice">{msg}</div>}
-    <div className="sectionTitle"><h2>Preseason QA</h2><span className="muted">Production integrity checks</span></div>
+    <div className="sectionTitle"><h2>SportsDataIO Futures</h2><span className="muted">2026 projection feed diagnostic</span></div><div className="card"><div className="qaTop"><div><b>Inspect 2026 futures markets</b><div className="muted">Checks availability without displaying your API key.</div></div><button className="button" onClick={checkSportsData}>Check Futures</button></div>{sdio&&<div className="qaList"><div className="qaRow"><span className={'qaBadge '+(sdio.keyVisible?'pass':'fail')}>{sdio.keyVisible?'PASS':'FAIL'}</span><div><b>API key visible</b></div></div>{sdio.ok&&Object.entries(sdio.markets||{}).map(([k,v])=><div className="qaRow" key={k}><span className={'qaBadge '+(v?'pass':'warning')}>{v?'FOUND':'CHECK'}</span><div><b>{k.replace(/([A-Z])/g,' $1')}</b></div></div>)}{sdio.rowCount!=null&&<div className="muted">Rows returned: {sdio.rowCount} · Endpoint: {sdio.endpoint}</div>}{sdio.error&&<div className="notice">{sdio.error}</div>}</div>}</div><div className="sectionTitle"><h2>Preseason QA</h2><span className="muted">Production integrity checks</span></div>
     <div className="card">
       <div className="qaTop"><div><b>Run full system check</b><div className="muted">Owners, rosters, season guard, scoring, Tier 1, standings and sync health.</div></div><button className="button" onClick={runQa}>Run QA</button></div>
       {qa?.checkedAt&&<div className="muted qaTime">Last checked: {new Date(qa.checkedAt).toLocaleString()}</div>}
@@ -14,7 +14,7 @@ export function Login(){
 }
 
 export function AdminPanel({teams}){
-  const [msg,setMsg]=useState('');const [qa,setQa]=useState(null);const [health,setHealth]=useState(null);const [audit,setAudit]=useState([]);
+  const [msg,setMsg]=useState('');const [qa,setQa]=useState(null);const [sdio,setSdio]=useState(null);const [health,setHealth]=useState(null);const [audit,setAudit]=useState([]);
   async function loadHealth(){const r=await fetch('/api/admin/health',{cache:'no-store'});const j=await r.json();if(r.ok){setHealth(j.health);setAudit(j.audit||[])}}
   useEffect(()=>{loadHealth()},[]);
   const [teamId,setTeamId]=useState(teams[0]?.team_id||'');
@@ -24,6 +24,7 @@ export function AdminPanel({teams}){
   const [note,setNote]=useState('');
   const [gameId,setGameId]=useState('');
   const [gameType,setGameType]=useState('ccg');
+  async function checkSportsData(){setMsg('Checking SportsDataIO futures…');const r=await fetch('/api/admin/sportsdataio',{cache:'no-store'});const j=await r.json();setSdio(j);setMsg(r.ok?'SportsDataIO check complete':(j.error||'SportsDataIO check failed'))}
   async function runQa(){setMsg('Running QA…');const r=await fetch('/api/admin/qa',{cache:'no-store'});const j=await r.json();if(r.ok){setQa(j.qa);setMsg('QA complete')}else setMsg(j.error||'QA failed')}
   async function post(url,body){setMsg('Working…');const r=await fetch(url,{method:'POST',headers:{'content-type':'application/json'},body:body?JSON.stringify(body):undefined});const j=await r.json();setMsg(r.ok?'Saved successfully':(j.error||'Action failed'));if(r.ok)setTimeout(()=>location.reload(),700)}
   return <div><div className="sectionTitle"><h2>System Health</h2><span className="muted">Commissioner diagnostics</span></div><div className="adminHealth"><div className="card"><div className="muted">Tier 1 Live</div><div className="kpi">{health?.liveAvailable?'Yes':'—'}</div></div><div className="card"><div className="muted">2026 Games</div><div className="kpi">{health?.gameCount??'—'}</div></div><div className="card"><div className="muted">Last Sync</div><div><b>{health?.lastCompleted?new Date(health.lastCompleted).toLocaleString():'—'}</b></div></div></div><div className="adminActions">
@@ -32,7 +33,7 @@ export function AdminPanel({teams}){
       <div className="card"><h2>Postseason Game Override</h2><p className="muted">Use only if CFBD labels a postseason game incorrectly.</p><label>Internal game ID</label><input className="field" type="number" value={gameId} onChange={e=>setGameId(e.target.value)}/><label>Classification</label><select className="field" value={gameType} onChange={e=>setGameType(e.target.value)}><option value="ccg">Conference Championship</option><option value="bowl">Bowl</option><option value="cfp">CFP</option></select><button className="button" onClick={()=>post('/api/admin/classification',{gameId,isCcg:gameType==='ccg',isBowl:gameType==='bowl',isCfp:gameType==='cfp'})}>Apply Override</button></div>
     </div>
     {msg&&<div className="notice">{msg}</div>}
-    <div className="sectionTitle"><h2>Preseason QA</h2><span className="muted">Production integrity checks</span></div>
+    <div className="sectionTitle"><h2>SportsDataIO Futures</h2><span className="muted">2026 projection feed diagnostic</span></div><div className="card"><div className="qaTop"><div><b>Inspect 2026 futures markets</b><div className="muted">Checks availability without displaying your API key.</div></div><button className="button" onClick={checkSportsData}>Check Futures</button></div>{sdio&&<div className="qaList"><div className="qaRow"><span className={'qaBadge '+(sdio.keyVisible?'pass':'fail')}>{sdio.keyVisible?'PASS':'FAIL'}</span><div><b>API key visible</b></div></div>{sdio.ok&&Object.entries(sdio.markets||{}).map(([k,v])=><div className="qaRow" key={k}><span className={'qaBadge '+(v?'pass':'warning')}>{v?'FOUND':'CHECK'}</span><div><b>{k.replace(/([A-Z])/g,' $1')}</b></div></div>)}{sdio.rowCount!=null&&<div className="muted">Rows returned: {sdio.rowCount} · Endpoint: {sdio.endpoint}</div>}{sdio.error&&<div className="notice">{sdio.error}</div>}</div>}</div><div className="sectionTitle"><h2>Preseason QA</h2><span className="muted">Production integrity checks</span></div>
     <div className="card">
       <div className="qaTop"><div><b>Run full system check</b><div className="muted">Owners, rosters, season guard, scoring, Tier 1, standings and sync health.</div></div><button className="button" onClick={runQa}>Run QA</button></div>
       {qa?.checkedAt&&<div className="muted qaTime">Last checked: {new Date(qa.checkedAt).toLocaleString()}</div>}
