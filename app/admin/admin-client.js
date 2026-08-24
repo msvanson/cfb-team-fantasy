@@ -59,7 +59,9 @@ export function AdminPanel({teams}){
 
   async function refreshProjections(){setMsg('Refreshing projections…');const r=await fetch('/api/admin/projections',{method:'POST'});const j=await r.json();setProjResult(j);setMsg(r.ok?'Projection refresh complete':(j.error||'Projection refresh failed'))}
 
-  async function runProjectionQa(){setMsg('Running projection QA…');const r=await fetch('/api/admin/projection-qa',{cache:'no-store'});const j=await r.json();if(r.ok){setProjectionQa(j.qa);setMsg('Projection QA complete')}else setMsg(j.error||'Projection QA failed')}\n\n  async function runQa(){
+  async function runProjectionQa(){setMsg('Running projection QA…');const r=await fetch('/api/admin/projection-qa',{cache:'no-store'});const j=await r.json();if(r.ok){setProjectionQa(j.qa);setMsg('Projection QA complete')}else setMsg(j.error||'Projection QA failed')}
+
+  async function runQa(){
     setMsg('Running QA…');
     const r=await fetch('/api/admin/qa',{cache:'no-store'});
     const j=await r.json();
