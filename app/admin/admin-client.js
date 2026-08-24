@@ -30,7 +30,7 @@ export function Login(){
 export function AdminPanel({teams}){
   const [msg,setMsg]=useState('');
   const [qa,setQa]=useState(null);
-  const [sdio,setSdio]=useState(null);const [projResult,setProjResult]=useState(null);
+  const [sdio,setSdio]=useState(null);const [projResult,setProjResult]=useState(null);const [projectionQa,setProjectionQa]=useState(null);
   const [health,setHealth]=useState(null);
   const [audit,setAudit]=useState([]);
   const [teamId,setTeamId]=useState(teams[0]?.team_id||'');
@@ -59,7 +59,7 @@ export function AdminPanel({teams}){
 
   async function refreshProjections(){setMsg('Refreshing projections…');const r=await fetch('/api/admin/projections',{method:'POST'});const j=await r.json();setProjResult(j);setMsg(r.ok?'Projection refresh complete':(j.error||'Projection refresh failed'))}
 
-  async function runQa(){
+  async function runProjectionQa(){setMsg('Running projection QA…');const r=await fetch('/api/admin/projection-qa',{cache:'no-store'});const j=await r.json();if(r.ok){setProjectionQa(j.qa);setMsg('Projection QA complete')}else setMsg(j.error||'Projection QA failed')}\n\n  async function runQa(){
     setMsg('Running QA…');
     const r=await fetch('/api/admin/qa',{cache:'no-store'});
     const j=await r.json();
@@ -146,7 +146,24 @@ export function AdminPanel({teams}){
       </div>}
     </div>
 
-    <div className="sectionTitle"><h2>Season Projections</h2><span className="muted">Sunday 5:00 AM ET model</span></div><div className="card"><div className="qaTop"><div><b>Refresh full-season projections</b><div className="muted">Trial/scrambled SportsDataIO runs are stored for testing but never published to league pages.</div></div><button className="button" onClick={refreshProjections}>Refresh Projections</button></div>{projResult&&<div className="qaList"><div className="qaRow"><span className={'qaBadge '+(projResult.publishable?'pass':'warning')}>{projResult.publishable?'PUBLIC':'TEST'}</span><div><b>{projResult.quality}</b><div className="muted">Mapped {projResult.mappedTeams} teams · Win totals for {projResult.winTotalTeams} · Run #{projResult.runId}</div></div></div>{projResult.unmapped?.length?<div className="muted wrapText">Unmapped: {projResult.unmapped.join(', ')}</div>:null}</div>}</div><div className="sectionTitle"><h2>Preseason QA</h2><span className="muted">Production integrity checks</span></div>
+    <div className="sectionTitle"><h2>Season Projections</h2><span className="muted">Sunday 5:00 AM ET model</span></div><div className="card"><div className="qaTop"><div><b>Refresh full-season projections</b><div className="muted">Trial/scrambled SportsDataIO runs are stored for testing but never published to league pages.</div></div><button className="button" onClick={refreshProjections}>Refresh Projections</button></div>{projResult&&<div className="qaList"><div className="qaRow"><span className={'qaBadge '+(projResult.publishable?'pass':'warning')}>{projResult.publishable?'PUBLIC':'TEST'}</span><div><b>{projResult.quality}</b><div className="muted">Mapped {projResult.mappedTeams} teams · Win totals for {projResult.winTotalTeams} · Run #{projResult.runId}</div></div></div>{projResult.unmapped?.length?<div className="muted wrapText">Unmapped: {projResult.unmapped.join(', ')}</div>:null}</div>}</div><div className="sectionTitle"><h2>Projection QA</h2><span className="muted">Latest saved projection run</span></div>
+<div className="card">
+  <div className="qaTop">
+    <div>
+      <b>Validate latest projection run</b>
+      <div className="muted">Checks FBS coverage, roster rollups, floor protection and conference/CFP point pools.</div>
+    </div>
+    <button className="button" onClick={runProjectionQa}>Run Projection QA</button>
+  </div>
+  {projectionQa?.checkedAt&&<div className="muted qaTime">Run #{projectionQa.runId} · Checked {new Date(projectionQa.checkedAt).toLocaleString()}</div>}
+  {projectionQa?.checks?.length?<div className="qaList">
+    {projectionQa.checks.map((c,i)=><div className="qaRow" key={i}>
+      <span className={'qaBadge '+String(c.status).toLowerCase()}>{c.status}</span>
+      <div><b>{c.name}</b><div className="muted">{c.detail}</div></div>
+    </div>)}
+  </div>:<div className="liveEmpty">No projection QA run yet.</div>}
+</div>
+<div className="sectionTitle"><h2>Preseason QA</h2><span className="muted">Production integrity checks</span></div>
     <div className="card">
       <div className="qaTop"><div><b>Run full system check</b><div className="muted">Owners, rosters, season guard, scoring, Tier 1, standings and sync health.</div></div><button className="button" onClick={runQa}>Run QA</button></div>
       {qa?.checkedAt&&<div className="muted qaTime">Last checked: {new Date(qa.checkedAt).toLocaleString()}</div>}
