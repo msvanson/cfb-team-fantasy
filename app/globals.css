@@ -21,3 +21,5 @@
 .liveThrottle{margin:8px 2px 12px}
 .game-winner strong,.game-winner>b{font-weight:900}
 @media(max-width:640px){.liveHeaderGrid{grid-template-columns:1fr 1fr}.liveHeaderGrid .card:first-child{grid-column:1/-1}.liveMeta{flex-direction:column;gap:3px}}
+
+.scoringGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.scoringRule{display:flex;justify-content:space-between;align-items:center;gap:12px}.rulePoints{font-size:28px;font-weight:900}
