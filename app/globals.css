@@ -2,3 +2,9 @@
 
 .notice{margin-top:10px;padding:10px 12px;border-radius:10px;background:#fff4d6;color:#5d4500;font-size:.9rem}
 .live-summary{margin-bottom:16px}.muted{color:#64748b}.game-list{display:grid;gap:12px}.game-card{padding:14px}.game-status{font-size:.78rem;font-weight:800;letter-spacing:.06em;color:#64748b;margin-bottom:8px}.game-team{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-top:1px solid #edf2f7}.game-team:first-of-type{border-top:0}.game-team span{display:flex;flex-direction:column}.game-team small{font-size:.76rem;color:#64748b;margin-top:2px}.game-team b{font-size:1.25rem}
+
+.diagnostics { margin-top: 14px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,.12); }
+.diagnostics summary { cursor: pointer; font-weight: 700; margin-bottom: 8px; }
+.diag-row { display: flex; gap: 12px; justify-content: space-between; align-items: flex-start; padding: 5px 0; font-size: 13px; }
+.diag-row span { color: var(--muted); }
+.diag-row strong { max-width: 62%; text-align: right; overflow-wrap: anywhere; }
