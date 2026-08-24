@@ -7,6 +7,7 @@ export async function POST(){
   try{
     await adminRpc('admin_clear_cfbd_cooldown');
     const result=await syncCfbd({forceSchedule:false});
+    await adminRpc('admin_log_action',{p_action_type:'force_sync',p_summary:'Forced CFBD sync',p_details:result||{}});
     return NextResponse.json({ok:true,result});
   }catch(e){return NextResponse.json({ok:false,error:e?.message||String(e)},{status:500})}
 }

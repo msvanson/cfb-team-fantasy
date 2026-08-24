@@ -10,6 +10,6 @@ export async function POST(req){
       p_points:Number(b.points), p_week_key:b.weekKey||'Commissioner',
       p_note:b.note||null
     });
-    return NextResponse.json({ok:true,id});
+    await adminRpc('admin_log_action',{p_action_type:'scoring_adjustment',p_summary:`Manual scoring adjustment: ${b.points} points`,p_details:{teamId:b.teamId,eventType:b.eventType,weekKey:b.weekKey,note:b.note}});return NextResponse.json({ok:true,id});
   }catch(e){return NextResponse.json({ok:false,error:e?.message||String(e)},{status:500})}
 }
