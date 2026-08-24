@@ -30,7 +30,7 @@ export function Login(){
 export function AdminPanel({teams}){
   const [msg,setMsg]=useState('');
   const [qa,setQa]=useState(null);
-  const [sdio,setSdio]=useState(null);const [projResult,setProjResult]=useState(null);const [projectionQa,setProjectionQa]=useState(null);const [espnFutures,setEspnFutures]=useState(null);
+  const [sdio,setSdio]=useState(null);const [projResult,setProjResult]=useState(null);const [projectionQa,setProjectionQa]=useState(null);const [espnFutures,setEspnFutures]=useState(null);const [winTotalsInspect,setWinTotalsInspect]=useState(null);
   const [health,setHealth]=useState(null);
   const [audit,setAudit]=useState([]);
   const [teamId,setTeamId]=useState(teams[0]?.team_id||'');
@@ -58,6 +58,8 @@ export function AdminPanel({teams}){
   }
 
   async function refreshProjections(){setMsg('Refreshing projections…');const r=await fetch('/api/admin/projections',{method:'POST'});const j=await r.json();setProjResult(j);setMsg(r.ok?'Projection refresh complete':(j.error||'Projection refresh failed'))}
+
+  async function inspectWinTotals(){setMsg('Inspecting 2026 win totals…');const r=await fetch('/api/admin/win-totals-inspector',{cache:'no-store'});const j=await r.json();setWinTotalsInspect(j);setMsg(r.ok?'Win totals inspection complete':(j.error||'Win totals inspection failed'))}
 
   async function inspectEspnFutures(){setMsg('Inspecting ESPN 2026 futures…');const r=await fetch('/api/admin/espn-futures',{cache:'no-store'});const j=await r.json();setEspnFutures(j);setMsg(r.ok?'ESPN futures inspection complete':(j.error||'ESPN futures inspection failed'))}
 
@@ -150,7 +152,17 @@ export function AdminPanel({teams}){
       </div>}
     </div>
 
-    <div className="sectionTitle"><h2>Season Projections</h2><span className="muted">Sunday 5:00 AM ET model</span></div><div className="card"><div className="qaTop"><div><b>Refresh full-season projections</b><div className="muted">Trial/scrambled SportsDataIO runs are stored for testing but never published to league pages.</div></div><button className="button" onClick={refreshProjections}>Refresh Projections</button></div>{projResult&&<div className="qaList"><div className="qaRow"><span className={'qaBadge '+(projResult.publishable?'pass':'warning')}>{projResult.publishable?'PUBLIC':'TEST'}</span><div><b>{projResult.quality}</b><div className="muted">Mapped {projResult.mappedTeams} teams · Win totals for {projResult.winTotalTeams} · Run #{projResult.runId}</div></div></div>{projResult.unmapped?.length?<div className="muted wrapText">Unmapped: {projResult.unmapped.join(', ')}</div>:null}</div>}</div><div className="sectionTitle"><h2>ESPN Futures Inspector</h2><span className="muted">2026 · free ESPN futures feed</span></div>
+    <div className="sectionTitle"><h2>Season Projections</h2><span className="muted">Sunday 5:00 AM ET model</span></div><div className="card"><div className="qaTop"><div><b>Refresh full-season projections</b><div className="muted">Trial/scrambled SportsDataIO runs are stored for testing but never published to league pages.</div></div><button className="button" onClick={refreshProjections}>Refresh Projections</button></div>{projResult&&<div className="qaList"><div className="qaRow"><span className={'qaBadge '+(projResult.publishable?'pass':'warning')}>{projResult.publishable?'PUBLIC':'TEST'}</span><div><b>{projResult.quality}</b><div className="muted">Mapped {projResult.mappedTeams} teams · Win totals for {projResult.winTotalTeams} · Run #{projResult.runId}</div></div></div>{projResult.unmapped?.length?<div className="muted wrapText">Unmapped: {projResult.unmapped.join(', ')}</div>:null}</div>}</div><div className="sectionTitle"><h2>Win Totals Inspector</h2><span className="muted">2026 · $0 public source</span></div>
+<div className="card">
+ <div className="qaTop"><div><b>Inspect SportsBettingDime win totals</b><div className="muted">Parses team total, Over/Under prices and a vig-adjusted expected-win estimate without changing production projections.</div></div><button className="button" onClick={inspectWinTotals}>Inspect Win Totals</button></div>
+ {winTotalsInspect?.ok&&<div className="qaList">
+  <div className="qaRow"><span className={'qaBadge '+(winTotalsInspect.safeToUse?'pass':'warning')}>{winTotalsInspect.safeToUse?'PASS':'CHECK'}</span><div><b>{winTotalsInspect.matchedTeams} of 138 FBS teams matched</b><div className="muted">{winTotalsInspect.parsedRows} source rows parsed</div></div></div>
+  <div className="qaRow"><span className="qaBadge info">INFO</span><div><b>Missing FBS teams</b><div className="muted wrapText">{winTotalsInspect.missingTeams?.join(' · ')||'None'}</div></div></div>
+  <div className="sdioShape"><b>Sample matched totals</b>{(winTotalsInspect.samples||[]).map((x,i)=><div className="muted" key={i}>{x.school}: {x.line} · O {x.over>0?'+':''}{x.over} / U {x.under>0?'+':''}{x.under} · adjusted {Number(x.adjustedWins).toFixed(2)}</div>)}</div>
+ </div>}
+ {winTotalsInspect&&!winTotalsInspect.ok&&<div className="notice">{winTotalsInspect.error}</div>}
+</div>
+<div className="sectionTitle"><h2>ESPN Futures Inspector</h2><span className="muted">2026 · free ESPN futures feed</span></div>
 <div className="card">
   <div className="qaTop">
     <div><b>Inspect ESPN futures board</b><div className="muted">Checks which 2026 markets ESPN currently exposes before we replace SportsDataIO.</div></div>
