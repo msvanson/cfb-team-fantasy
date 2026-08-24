@@ -8,3 +8,5 @@
 .diag-row { display: flex; gap: 12px; justify-content: space-between; align-items: flex-start; padding: 5px 0; font-size: 13px; }
 .diag-row span { color: var(--muted); }
 .diag-row strong { max-width: 62%; text-align: right; overflow-wrap: anywhere; }
+
+.rosterRows{margin-top:12px}.rosterRow{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}.rosterRow>span{display:flex;flex-direction:column}.rosterRow small{color:var(--muted);font-size:11px;margin-top:3px}.rosterStats{text-align:right}.rosterStats>b{font-size:17px}.table td b{font-weight:800}
