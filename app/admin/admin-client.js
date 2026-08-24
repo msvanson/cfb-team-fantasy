@@ -30,7 +30,7 @@ export function Login(){
 export function AdminPanel({teams}){
   const [msg,setMsg]=useState('');
   const [qa,setQa]=useState(null);
-  const [sdio,setSdio]=useState(null);const [projResult,setProjResult]=useState(null);const [projectionQa,setProjectionQa]=useState(null);
+  const [sdio,setSdio]=useState(null);const [projResult,setProjResult]=useState(null);const [projectionQa,setProjectionQa]=useState(null);const [espnFutures,setEspnFutures]=useState(null);
   const [health,setHealth]=useState(null);
   const [audit,setAudit]=useState([]);
   const [teamId,setTeamId]=useState(teams[0]?.team_id||'');
@@ -58,6 +58,8 @@ export function AdminPanel({teams}){
   }
 
   async function refreshProjections(){setMsg('Refreshing projections…');const r=await fetch('/api/admin/projections',{method:'POST'});const j=await r.json();setProjResult(j);setMsg(r.ok?'Projection refresh complete':(j.error||'Projection refresh failed'))}
+
+  async function inspectEspnFutures(){setMsg('Inspecting ESPN 2026 futures…');const r=await fetch('/api/admin/espn-futures',{cache:'no-store'});const j=await r.json();setEspnFutures(j);setMsg(r.ok?'ESPN futures inspection complete':(j.error||'ESPN futures inspection failed'))}
 
   async function runProjectionQa(){setMsg('Running projection QA…');const r=await fetch('/api/admin/projection-qa',{cache:'no-store'});const j=await r.json();if(r.ok){setProjectionQa(j.qa);setMsg('Projection QA complete')}else setMsg(j.error||'Projection QA failed')}
 
@@ -148,7 +150,20 @@ export function AdminPanel({teams}){
       </div>}
     </div>
 
-    <div className="sectionTitle"><h2>Season Projections</h2><span className="muted">Sunday 5:00 AM ET model</span></div><div className="card"><div className="qaTop"><div><b>Refresh full-season projections</b><div className="muted">Trial/scrambled SportsDataIO runs are stored for testing but never published to league pages.</div></div><button className="button" onClick={refreshProjections}>Refresh Projections</button></div>{projResult&&<div className="qaList"><div className="qaRow"><span className={'qaBadge '+(projResult.publishable?'pass':'warning')}>{projResult.publishable?'PUBLIC':'TEST'}</span><div><b>{projResult.quality}</b><div className="muted">Mapped {projResult.mappedTeams} teams · Win totals for {projResult.winTotalTeams} · Run #{projResult.runId}</div></div></div>{projResult.unmapped?.length?<div className="muted wrapText">Unmapped: {projResult.unmapped.join(', ')}</div>:null}</div>}</div><div className="sectionTitle"><h2>Projection QA</h2><span className="muted">Latest saved projection run</span></div>
+    <div className="sectionTitle"><h2>Season Projections</h2><span className="muted">Sunday 5:00 AM ET model</span></div><div className="card"><div className="qaTop"><div><b>Refresh full-season projections</b><div className="muted">Trial/scrambled SportsDataIO runs are stored for testing but never published to league pages.</div></div><button className="button" onClick={refreshProjections}>Refresh Projections</button></div>{projResult&&<div className="qaList"><div className="qaRow"><span className={'qaBadge '+(projResult.publishable?'pass':'warning')}>{projResult.publishable?'PUBLIC':'TEST'}</span><div><b>{projResult.quality}</b><div className="muted">Mapped {projResult.mappedTeams} teams · Win totals for {projResult.winTotalTeams} · Run #{projResult.runId}</div></div></div>{projResult.unmapped?.length?<div className="muted wrapText">Unmapped: {projResult.unmapped.join(', ')}</div>:null}</div>}</div><div className="sectionTitle"><h2>ESPN Futures Inspector</h2><span className="muted">2026 · free ESPN futures feed</span></div>
+<div className="card">
+  <div className="qaTop">
+    <div><b>Inspect ESPN futures board</b><div className="muted">Checks which 2026 markets ESPN currently exposes before we replace SportsDataIO.</div></div>
+    <button className="button" onClick={inspectEspnFutures}>Inspect ESPN Futures</button>
+  </div>
+  {espnFutures?.ok&&<div className="qaList">
+    <div className="qaRow"><span className="qaBadge pass">INFO</span><div><b>{espnFutures.marketCount} markets found</b><div className="muted wrapText">{(espnFutures.targetLikeMarkets||[]).join(' · ')||'No projection-like labels detected'}</div></div></div>
+    <div className="sdioShape"><b>Market labels</b><div className="muted wrapText">{(espnFutures.marketLabels||[]).join(' · ')||'—'}</div></div>
+    {(espnFutures.markets||[]).slice(0,30).map((m,i)=><div className="card" key={i}><div><b>{m.display||m.name||'Market'}</b></div><div className="muted">Type: {String(m.type||'—')} · Providers: {m.providerCount}</div><div className="muted wrapText">{JSON.stringify(m.providers)}</div></div>)}
+  </div>}
+  {espnFutures&&!espnFutures.ok&&<div className="notice">{espnFutures.error}</div>}
+</div>
+<div className="sectionTitle"><h2>Projection QA</h2><span className="muted">Latest saved projection run</span></div>
 <div className="card">
   <div className="qaTop">
     <div>
