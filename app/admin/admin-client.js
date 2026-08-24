@@ -157,9 +157,9 @@ export function AdminPanel({teams}){
     <button className="button" onClick={inspectEspnFutures}>Inspect ESPN Futures</button>
   </div>
   {espnFutures?.ok&&<div className="qaList">
-    <div className="qaRow"><span className="qaBadge pass">INFO</span><div><b>{espnFutures.marketCount} markets found</b><div className="muted wrapText">{(espnFutures.targetLikeMarkets||[]).join(' · ')||'No projection-like labels detected'}</div></div></div>
+    <div className="qaRow"><span className="qaBadge pass">INFO</span><div><b>{espnFutures.marketCount} markets · {espnFutures.marketsWithBooks} with odds</b><div className="muted">{espnFutures.totalBookEntries||0} total sportsbook entries</div><div className="muted wrapText">{(espnFutures.targetLikeMarkets||[]).join(' · ')||'No projection-like labels detected'}</div></div></div>
     <div className="sdioShape"><b>Market labels</b><div className="muted wrapText">{(espnFutures.marketLabels||[]).join(' · ')||'—'}</div></div>
-    {(espnFutures.markets||[]).slice(0,30).map((m,i)=><div className="card" key={i}><div><b>{m.display||m.name||'Market'}</b></div><div className="muted">Type: {String(m.type||'—')} · Providers: {m.providerCount}</div><div className="muted wrapText">{JSON.stringify(m.providers)}</div></div>)}
+    {(espnFutures.markets||[]).slice(0,30).map((m,i)=><div className="card" key={i}><div><b>{m.display||m.name||'Market'}</b></div><div className="muted">Type: {String(m.type||'—')} · Providers: {m.providerCount} · Book entries: {m.totalBooks}</div><div className="muted wrapText">Fields: {(m.topLevelFields||[]).join(', ')}</div><div className="muted wrapText">{JSON.stringify(m.providers)}</div></div>)}
   </div>}
   {espnFutures&&!espnFutures.ok&&<div className="notice">{espnFutures.error}</div>}
 </div>
