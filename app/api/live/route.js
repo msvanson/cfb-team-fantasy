@@ -16,19 +16,6 @@ const supabase = createClient(
 export async function GET(request) {
   const url = new URL(request.url);
   const force = url.searchParams.get('force') === '1';
-  const diagnostics = {
-    server: true,
-    cfbdApiKeyPresent: Boolean(process.env.CFBD_API_KEY),
-    syncSecretPresent: Boolean(process.env.CFB_SYNC_SECRET),
-    supabaseUrlPresent: hasSupabaseUrl,
-    supabasePublishableKeyPresent: hasSupabaseKey,
-    vercelEnvironment: process.env.VERCEL_ENV || null,
-    nodeEnvironment: process.env.NODE_ENV || null,
-    runtimeRegion: process.env.VERCEL_REGION || null,
-    syncSecretLength: process.env.CFB_SYNC_SECRET?.length || 0,
-    cfbdApiKeyLength: process.env.CFBD_API_KEY?.length || 0,
-    deploymentIdPresent: Boolean(process.env.VERCEL_DEPLOYMENT_ID),
-  };
 
   let sync = null;
   try {
@@ -63,7 +50,6 @@ export async function GET(request) {
     return NextResponse.json({
       ok: false,
       error: gameError?.message || dirError?.message || countError?.message,
-      diagnostics,
       sync,
     }, { status: 500 });
   }
@@ -81,7 +67,6 @@ export async function GET(request) {
     ok: Boolean(sync?.ok),
     updatedAt: new Date().toISOString(),
     totalGames: totalGames || 0,
-    diagnostics,
     sync,
     games: decorated,
   });
