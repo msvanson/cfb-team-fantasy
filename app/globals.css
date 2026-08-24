@@ -10,3 +10,5 @@
 .diag-row strong { max-width: 62%; text-align: right; overflow-wrap: anywhere; }
 
 .rosterRows{margin-top:12px}.rosterRow{display:flex;justify-content:space-between;gap:12px;padding:9px 0;border-bottom:1px solid var(--line)}.rosterRow>span{display:flex;flex-direction:column}.rosterRow small{color:var(--muted);font-size:11px;margin-top:3px}.rosterStats{text-align:right}.rosterStats>b{font-size:17px}.table td b{font-weight:800}
+
+.teamLink{text-decoration:underline;text-decoration-color:#475569;text-underline-offset:3px}.teamLink:hover{text-decoration-color:currentColor}
