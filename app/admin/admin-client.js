@@ -17,8 +17,8 @@ export function Login(){
     else setMsg(j.error||'Login failed');
   }
   return <div className="card adminLogin">
-    <h2>Commissioner Login</h2>
-    <p className="muted">This page is hidden from public navigation.</p>
+    <h2>Commissioner Access</h2>
+    <p className="muted">Commissioners should sign in through the Account tab, then use “Open Commissioner Admin.” The legacy password remains available as an emergency fallback.</p>
     <form onSubmit={submit}>
       <input className="field" type="password" placeholder="Commissioner password" value={password} onChange={e=>setPassword(e.target.value)}/>
       <button className="button" type="submit">Sign in</button>
