@@ -65,3 +65,7 @@
 }
 
 .liveWeekHeading{margin:18px 0 12px}.liveWeekHeading h1{margin:0;font-size:30px;line-height:1.1}.liveWeekHeading .muted{margin-top:4px;font-size:13px}
+
+.game-team-name-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.win-probability{font-size:12px;font-weight:800;opacity:.88;white-space:nowrap}
+.fallback-odds-note{font-size:11px;opacity:.68;margin-top:7px}

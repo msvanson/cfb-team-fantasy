@@ -1,0 +1,4 @@
+Live cached win probabilities v1
+Displays cached win % beside owned teams.
+fallback_50_50 values show * and explanatory note.
+No Odds-API request is made by the Live page.

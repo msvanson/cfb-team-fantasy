@@ -34,6 +34,12 @@ function matchupClass(g){
   return '';
 }
 function teamClass(t){return t?.is_owned?'owned-team-row':''}
+function winPct(g,side){
+  if(!g?.projection)return null;
+  const v=side==='home'?g.projection.home_win_probability:g.projection.away_win_probability;
+  return v==null?null:Number(v);
+}
+function isFallback(g){return g?.projection?.projection_source==='fallback_50_50'}
 
 export default function LiveClient(){
   const [data,setData]=useState({games:[],weeklyStandings:[],sync:null,totalGames:0,updatedAt:null});
@@ -92,7 +98,7 @@ export default function LiveClient(){
         <div className={`game-team ${teamClass(g.away)}`}>
           <span>
             {g.away.owner_name?<small className="game-owner">{g.away.owner_name}</small>:null}
-            <strong>{g.away.school}</strong>
+            <span className="game-team-name-line"><strong>{g.away.school}</strong>{g.away.is_owned&&winPct(g,'away')!=null?<span className="win-probability">{(winPct(g,'away')*100).toFixed(1)}%{isFallback(g)?'*':''}</span>:null}</span>
           </span>
           <b>{g.away_score??'—'}</b>
         </div>
@@ -100,10 +106,11 @@ export default function LiveClient(){
         <div className={`game-team ${teamClass(g.home)}`}>
           <span>
             {g.home.owner_name?<small className="game-owner">{g.home.owner_name}</small>:null}
-            <strong>{g.home.school}</strong>
+            <span className="game-team-name-line"><strong>{g.home.school}</strong>{g.home.is_owned&&winPct(g,'home')!=null?<span className="win-probability">{(winPct(g,'home')*100).toFixed(1)}%{isFallback(g)?'*':''}</span>:null}</span>
           </span>
           <b>{g.home_score??'—'}</b>
         </div>
+        {isFallback(g)?<div className="fallback-odds-note">* No sportsbook moneyline available — using 50/50 projection.</div>:null}
       </div>)}
     </div>
   </div>
