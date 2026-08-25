@@ -26,9 +26,16 @@ export async function GET(){
  if(ce||te||oe||se)return NextResponse.json({ok:false,error:(ce||te||oe||se).message},{status:500});
  const teamMap=new Map((teams||[]).map(t=>[Number(t.team_id),t]));
  const ownerMap=new Map((owners||[]).map(o=>[Number(o.id),o]));
- // Freeze waiver order at preview start: worst fantasy points, then worst season point diff,
- // then lower draft priority. This is only a preview until the final waiver-order rule is locked.
- const order=[...(standings||[])].sort((a,b)=>Number(a.fantasy_points||0)-Number(b.fantasy_points||0)||Number(a.point_differential||0)-Number(b.point_differential||0)||Number(b.draft_slot||0)-Number(a.draft_slot||0));
+ // Waiver priority is the exact reverse of the official current standings.
+ // We reproduce the league's official season standings rules here, then reverse the result:
+ // fantasy points DESC -> season point differential DESC -> higher draft order (lower draft_slot) DESC.
+ // This frozen reversed order is used for every round of the waiver run.
+ const officialStandings=[...(standings||[])].sort((a,b)=>
+   Number(b.fantasy_points||0)-Number(a.fantasy_points||0)
+   || Number(b.point_differential||0)-Number(a.point_differential||0)
+   || Number(a.draft_slot||999)-Number(b.draft_slot||999)
+ );
+ const order=[...officialStandings].reverse();
  const orderIndex=new Map(order.map((o,i)=>[Number(o.owner_id),i+1]));
  const rosters=new Map();
  for(const o of owners||[])rosters.set(Number(o.id),(teams||[]).filter(t=>Number(t.owner_id)===Number(o.id)).map(t=>({...t})));
