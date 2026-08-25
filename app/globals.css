@@ -102,3 +102,5 @@
 .rosterGameLine .teamNameWithLogo{gap:4px}.rosterGameLine .schoolLogo{width:15px;height:15px}
 .rosterGameState{opacity:.78}.rosterGamePct{font-weight:800}.rosterGameLine.isLive,.rosterGameLine.isLive .rosterGameState{font-weight:800;opacity:1}
 @media(max-width:640px){.rosterGameLine{display:grid;grid-template-columns:1fr auto}.rosterGameState{grid-column:1}.rosterGamePct{grid-column:2;grid-row:1}}
+
+.weeklySnapshotCard{margin-bottom:10px}.weeklySnapshotCard>summary{display:flex;justify-content:space-between;gap:12px;cursor:pointer;align-items:center}.weeklySnapshotCard>summary span{font-size:12px;opacity:.72}.weeklyBreakdowns{display:grid;gap:8px;margin-top:12px}.weeklyBreakdowns>details{border-top:1px solid rgba(255,255,255,.08);padding-top:8px}.weeklyBreakdowns summary{cursor:pointer;font-weight:700}.weeklyGameRow{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:7px 0;font-size:12px}@media(max-width:640px){.weeklyGameRow{align-items:flex-start;flex-direction:column;gap:3px}}

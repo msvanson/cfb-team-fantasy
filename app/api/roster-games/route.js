@@ -14,10 +14,10 @@ function pickForTeam(teamId,games,now){
   const live=relevant.find(g=>g.status==='in_progress'&&!g.completed);
   if(live)return live;
 
-  // Keep a just-finished game visible for six hours, then roll forward to the next game.
+  // Keep a just-finished game visible for 24 hours, then roll forward to the next game.
   const recentFinal=[...relevant].filter(g=>g.completed&&new Date(g.start_time).getTime()<=now)
     .sort((a,b)=>new Date(b.start_time)-new Date(a.start_time))[0];
-  if(recentFinal && now-new Date(recentFinal.start_time).getTime() < 6*60*60*1000)return recentFinal;
+  if(recentFinal && now-new Date(recentFinal.start_time).getTime() < 24*60*60*1000)return recentFinal;
 
   return relevant.filter(g=>!g.completed&&new Date(g.start_time).getTime()>now)
     .sort((a,b)=>new Date(a.start_time)-new Date(b.start_time))[0]||recentFinal||null;

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { syncCfbd } from '../../../lib/cfbd';
 import { currentFantasyWeek } from '../../../lib/fantasy-weeks';
+import { finalizeEndedFantasyWeeks } from '../../../lib/weekly-snapshots';
 
 function compareWeeklyRank(a,b){
   // Official weekly order:
@@ -26,6 +27,7 @@ const supabase = createClient(
 );
 
 export async function GET(request) {
+  try{await finalizeEndedFantasyWeeks(new Date())}catch{}
   const url = new URL(request.url);
   const force = url.searchParams.get('force') === '1';
 
