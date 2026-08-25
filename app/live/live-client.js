@@ -80,6 +80,7 @@ export default function LiveClient(){
         </tr>)}</tbody>
       </table>
     </div>
+    <div className="muted weeklyTieNote">Weekly tiebreakers: fantasy points → point differential → higher draft order.</div>
 
     <div className="liveMeta">
       <span>{liveCount} live · {games.filter(g=>g.completed).length} final · {games.filter(g=>!g.completed&&g.status!=='in_progress').length} upcoming</span>
