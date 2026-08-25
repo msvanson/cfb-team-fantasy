@@ -227,6 +227,24 @@ export function AdminPanel({teams}){
     </div>
   </div>
 </div>}
+
+{weeklyOddsTest?.model&&<div className="card" style={{marginTop:12}}>
+  <div className="qaTop">
+    <div><b>FBS Matchup Odds Diagnostic</b><div className="muted">{weeklyOddsTest.model}</div></div>
+  </div>
+  <div className="qaList">
+    <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.eventsMatched>0?'pass':'warning')}>{weeklyOddsTest.eventsMatched>0?'PASS':'CHECK'}</span><div><b>CFBD games matched to Odds-API</b><div className="muted">{weeklyOddsTest.eventsMatched||0} of {weeklyOddsTest.upcomingGamesChecked||0} test games matched</div></div></div>
+    <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.oddsResponsesOk>0?'pass':'warning')}>{weeklyOddsTest.oddsResponsesOk>0?'PASS':'CHECK'}</span><div><b>Odds responses</b><div className="muted">{weeklyOddsTest.oddsResponsesOk||0} matched games returned an odds response</div></div></div>
+    {(weeklyOddsTest.checks||[]).map((x,i)=><div className="card" key={'fbs'+i}>
+      <b>{x.away} @ {x.home}</b>
+      <div className="muted">{x.startTime}</div>
+      <div className="muted">Event matched: {x.eventMatched?'YES':'NO'} · Odds HTTP: {x.odds?.httpStatus??'—'}</div>
+      {x.event&&<div className="muted wrapText">Matched event: {JSON.stringify(x.event)}</div>}
+      {x.odds&&<div className="muted wrapText">Odds response: {JSON.stringify(x.odds.raw)}</div>}
+    </div>)}
+    <div className="card"><b>Live endpoint</b><div className="muted">{weeklyOddsTest.live?.allAmericanFootballLive??0} American-football games live right now. Zero is normal if none are currently being played.</div></div>
+  </div>
+</div>}
 <div className="sectionTitle"><h2>Projection QA</h2><span className="muted">Latest saved projection run</span></div>
 <div className="card">
   <div className="qaTop">

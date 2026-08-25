@@ -1,93 +1,133 @@
 import {NextResponse} from 'next/server';
 import {isAdminAuthenticated} from '../../../../lib/admin-auth';
+import {createClient} from '@supabase/supabase-js';
 
 const BASE='https://api.odds-api.io/v3';
-async function get(path,key,needsKey=true){
+const BOOKS='DraftKings,FanDuel';
+
+const supabase=createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+  {auth:{persistSession:false}}
+);
+
+async function api(path,key){
   const sep=path.includes('?')?'&':'?';
-  const url=needsKey?`${BASE}${path}${sep}apiKey=${encodeURIComponent(key)}`:`${BASE}${path}`;
-  const r=await fetch(url,{headers:{accept:'application/json'},cache:'no-store'});
+  const r=await fetch(`${BASE}${path}${sep}apiKey=${encodeURIComponent(key)}`,{
+    headers:{accept:'application/json'},
+    cache:'no-store'
+  });
   const text=await r.text();
-  let body; try{body=JSON.parse(text)}catch{body=text}
+  let body;try{body=JSON.parse(text)}catch{body=text}
   return {ok:r.ok,status:r.status,body};
 }
 const arr=x=>Array.isArray(x)?x:Array.isArray(x?.data)?x.data:Array.isArray(x?.events)?x.events:Array.isArray(x?.items)?x.items:[];
-const compactEvent=e=>e?({id:e.id,home:e.home,away:e.away,date:e.date,status:e.status,league:e.league,sport:e.sport,bookmakerCount:e.bookmakerCount,scores:e.scores}):null;
-const sanitizeOdds=o=>{
-  if(!o||typeof o!=='object')return o;
-  // API responses contain no API key, but cap size so Admin stays readable.
-  return JSON.parse(JSON.stringify(o).slice(0,12000));
-};
+
+function norm(s){
+  return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase()
+    .replace(/&/g,'and').replace(/[^a-z0-9]+/g,' ').trim();
+}
+function loose(a,b){
+  const x=norm(a),y=norm(b);
+  return x===y||x.startsWith(y+' ')||y.startsWith(x+' ')||x.includes(y)||y.includes(x);
+}
+function matchEvent(events,home,away){
+  return events.find(e=>
+    (loose(e.home,home)&&loose(e.away,away))||
+    (loose(e.home,away)&&loose(e.away,home))
+  )||null;
+}
+function summarizeOdds(body){
+  return {
+    topLevelFields:body&&typeof body==='object'?Object.keys(body):[],
+    raw:JSON.parse(JSON.stringify(body??null).slice(0,10000))
+  };
+}
+
 export async function GET(){
-  if(!await isAdminAuthenticated()) return NextResponse.json({ok:false,error:'Unauthorized'},{status:401});
+  if(!await isAdminAuthenticated())return NextResponse.json({ok:false,error:'Unauthorized'},{status:401});
   const key=process.env.ODDS_API_KEY;
-  if(!key) return NextResponse.json({ok:false,error:'ODDS_API_KEY missing'},{status:500});
+  if(!key)return NextResponse.json({ok:false,error:'ODDS_API_KEY missing'},{status:500});
+
   try{
-    const sportsR=await get('/sports',key,false);
-    const sports=arr(sportsR.body);
-    const football=sports.filter(x=>/football|american/i.test(`${x?.name||''} ${x?.slug||''}`));
-    const sport=football.find(x=>x.slug==='american-football')||football[0];
-    if(!sport) return NextResponse.json({ok:false,stage:'sports',sportsRaw:sportsR.body});
+    const now=new Date().toISOString();
+    const {data:games,error:ge}=await supabase
+      .from('games')
+      .select('id,cfbd_game_id,start_time,home_team_id,away_team_id,status,completed')
+      .eq('season_id',1)
+      .gte('start_time',now)
+      .eq('completed',false)
+      .order('start_time',{ascending:true})
+      .limit(12);
+    if(ge)throw ge;
 
-    const leaguesR=await get(`/leagues?sport=${encodeURIComponent(sport.slug)}&all=true`,key);
-    const leagues=arr(leaguesR.body);
-    let league=leagues.find(x=>x.slug==='usa-ncaaf')||leagues.find(x=>/ncaaf|ncaa.*football|college.*football|fbs/i.test(`${x?.name||''} ${x?.slug||''}`));
+    const teamIds=[...new Set((games||[]).flatMap(g=>[g.home_team_id,g.away_team_id]))];
+    const {data:teams,error:te}=await supabase
+      .from('team_directory')
+      .select('team_id,school')
+      .eq('season_id',1)
+      .in('team_id',teamIds);
+    if(te)throw te;
+    const tm=new Map((teams||[]).map(t=>[t.team_id,t.school]));
 
-    let searchRaw=[];
-    if(!league){
-      for(const q of ['NCAAF','NCAA football','college football']){
-        const r=await get(`/events/search?query=${encodeURIComponent(q)}`,key);
-        searchRaw.push({query:q,status:r.status,body:r.body});
-        const e=arr(r.body).find(x=>/ncaa|ncaaf|college|fbs/i.test(`${x?.league?.name||''} ${x?.league?.slug||''}`));
-        if(e?.league?.slug){league=e.league;break}
+    const checks=[];
+    for(const g of (games||[]).slice(0,8)){
+      const home=tm.get(g.home_team_id),away=tm.get(g.away_team_id);
+      if(!home||!away)continue;
+
+      // Search by both school names because Odds-API groups all college levels together.
+      const queries=[`${away} ${home}`,home,away];
+      let events=[],usedQuery=null,searchStatus=null;
+      for(const q of queries){
+        const sr=await api(`/events/search?query=${encodeURIComponent(q)}`,key);
+        searchStatus=sr.status;
+        if(sr.ok){
+          const found=arr(sr.body);
+          events.push(...found);
+          const hit=matchEvent(found,home,away);
+          if(hit){usedQuery=q;events=found;break}
+        }
       }
-    }
-    if(!league) return NextResponse.json({ok:false,stage:'league',sport,leaguesRaw:leaguesR.body,searchRaw});
-
-    // Intentionally run several event queries so we can see whether a filter is the issue.
-    const q1=await get(`/events?sport=${encodeURIComponent(sport.slug)}&league=${encodeURIComponent(league.slug)}&status=pending&limit=50`,key);
-    const q2=await get(`/events?sport=${encodeURIComponent(sport.slug)}&league=${encodeURIComponent(league.slug)}&limit=50`,key);
-    const q3=await get(`/events?sport=${encodeURIComponent(sport.slug)}&status=pending&limit=200`,key);
-
-    const pendingLeague=arr(q1.body);
-    const anyLeague=arr(q2.body);
-    const pendingSport=arr(q3.body);
-    const ncaaFromSport=pendingSport.filter(e=>String(e?.league?.slug||'')===String(league.slug)||/ncaaf|ncaa.*football|college.*football|fbs/i.test(`${e?.league?.name||''} ${e?.league?.slug||''}`));
-
-    const chosen=pendingLeague[0]||anyLeague[0]||ncaaFromSport[0]||null;
-    let chosenOdds=null;
-    if(chosen?.id){
-      const or=await get(`/odds?eventId=${encodeURIComponent(chosen.id)}&bookmakers=${encodeURIComponent('DraftKings,FanDuel')}`,key);
-      chosenOdds={httpStatus:or.status,ok:or.ok,event:compactEvent(chosen),raw:sanitizeOdds(or.body)};
+      const event=matchEvent(events,home,away);
+      let odds=null;
+      if(event?.id){
+        const or=await api(`/odds?eventId=${encodeURIComponent(event.id)}&bookmakers=${encodeURIComponent(BOOKS)}`,key);
+        odds={httpStatus:or.status,ok:or.ok,...summarizeOdds(or.body)};
+      }
+      checks.push({
+        cfbdGameId:g.cfbd_game_id,
+        startTime:g.start_time,
+        home,away,
+        searchHttpStatus:searchStatus,
+        usedQuery,
+        eventMatched:!!event,
+        event:event?{id:event.id,home:event.home,away:event.away,date:event.date,status:event.status,league:event.league}:null,
+        odds
+      });
     }
 
-    const liveR=await get(`/events/live?sport=${encodeURIComponent(sport.slug)}`,key);
-    const liveAll=arr(liveR.body);
-    const liveNcaa=liveAll.filter(e=>String(e?.league?.slug||'')===String(league.slug)||/ncaaf|ncaa.*football|college.*football|fbs/i.test(`${e?.league?.name||''} ${e?.league?.slug||''}`));
-    let liveOdds=null;
-    if(liveNcaa[0]?.id){
-      const lor=await get(`/odds?eventId=${encodeURIComponent(liveNcaa[0].id)}&bookmakers=${encodeURIComponent('DraftKings,FanDuel')}`,key);
-      liveOdds={httpStatus:lor.status,ok:lor.ok,event:compactEvent(liveNcaa[0]),raw:sanitizeOdds(lor.body)};
-    }
+    const matched=checks.filter(x=>x.eventMatched).length;
+    const oddsOk=checks.filter(x=>x.odds?.ok).length;
+
+    // Live endpoint is separate and should only contain games actually underway.
+    const liveR=await api('/events/live?sport=american-football',key);
+    const liveAll=liveR.ok?arr(liveR.body):[];
 
     return NextResponse.json({
       ok:true,
-      selected:{sport,league},
-      pregame:{
-        pendingLeagueQuery:{httpStatus:q1.status,count:pendingLeague.length,raw:sanitizeOdds(q1.body)},
-        noStatusLeagueQuery:{httpStatus:q2.status,count:anyLeague.length,raw:sanitizeOdds(q2.body)},
-        pendingWholeSportQuery:{httpStatus:q3.status,count:pendingSport.length,ncaafMatches:ncaaFromSport.length,rawSample:pendingSport.slice(0,10).map(compactEvent)},
-        selectedEventOdds:chosenOdds
-      },
+      model:'CFBD schedule -> Odds-API event search',
+      upcomingGamesChecked:checks.length,
+      eventsMatched:matched,
+      oddsResponsesOk:oddsOk,
+      checks,
       live:{
-        explanation:'Only games actually in progress should appear here.',
+        endpointOk:liveR.ok,
         httpStatus:liveR.status,
-        allLiveCount:liveAll.length,
-        ncaafLiveCount:liveNcaa.length,
-        rawNcaafEvents:liveNcaa.slice(0,10).map(compactEvent),
-        selectedLiveOdds:liveOdds
+        allAmericanFootballLive:liveAll.length,
+        explanation:'Zero is normal when no American-football games are actually in progress.'
       }
     });
   }catch(e){
-    return NextResponse.json({ok:false,stage:'exception',error:e?.message||String(e)},{status:500});
+    return NextResponse.json({ok:false,error:e?.message||String(e)},{status:500});
   }
 }
