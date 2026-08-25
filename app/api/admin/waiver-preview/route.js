@@ -64,5 +64,8 @@ export async function GET(){
   round++;
   if(round>100)break;
  }
- return NextResponse.json({ok:true,dry_run:true,period:key,waiver_order:order.map((o,i)=>({order:i+1,owner_id:o.owner_id,owner:o.owner_name,points:o.fantasy_points,point_differential:o.point_differential,draft_slot:o.draft_slot})),steps,summary:{successful:steps.filter(x=>x.status==='would_succeed').length,lost:steps.filter(x=>x.status==='lost_to_priority').length,invalid:steps.filter(x=>x.status==='invalid').length}});
+ const successfulSteps=steps.filter(x=>x.status==='would_succeed');
+ const unsuccessfulSteps=steps.filter(x=>x.status!=='would_succeed');
+ const rounds=[...new Set(successfulSteps.map(x=>x.round))].sort((a,b)=>a-b).map(r=>({round:r,transactions:successfulSteps.filter(x=>x.round===r)}));
+ return NextResponse.json({ok:true,dry_run:true,period:key,waiver_order:order.map((o,i)=>({order:i+1,owner_id:o.owner_id,owner:o.owner_name,points:o.fantasy_points,point_differential:o.point_differential,draft_slot:o.draft_slot})),rounds,unsuccessful_claims:unsuccessfulSteps,steps,summary:{successful:successfulSteps.length,lost:steps.filter(x=>x.status==='lost_to_priority').length,invalid:steps.filter(x=>x.status==='invalid').length}});
 }

@@ -23,8 +23,10 @@ export default function AccountClient(){
    e.preventDefault();setBusy(true);setMsg('');
    try{
      if(mode==='signup'){
-       if(username.trim().length<3)throw new Error('Username must be at least 3 characters.');
-       const {data,error}=await supabase.auth.signUp({email,password,options:{data:{username:username.trim()}}});
+       const cleanUsername=username.trim();
+       if(cleanUsername.length<3||cleanUsername.length>30)throw new Error('Username must be 3–30 characters.');
+       if(!/^[A-Za-z0-9_.-]+$/.test(cleanUsername))throw new Error('Username can only contain letters, numbers, underscores (_), periods (.), and hyphens (-). Spaces are not allowed.');
+       const {data,error}=await supabase.auth.signUp({email,password,options:{data:{username:cleanUsername}}});
        if(error)throw error;
        setMsg(data.session?'Account created and signed in.':'Account created. Check your email to confirm it, then sign in.');
      }else{
@@ -51,7 +53,7 @@ export default function AccountClient(){
    {msg&&<div className="notice">{msg}</div>}
  </div>;
  return <div className="card accountCard"><div className="authTabs"><button className={mode==='signin'?'button':'button secondary'} onClick={()=>setMode('signin')}>Sign In</button><button className={mode==='signup'?'button':'button secondary'} onClick={()=>setMode('signup')}>Create Account</button></div>
-   <form onSubmit={submit} className="accountForm">{mode==='signup'&&<label>Public username<input value={username} onChange={e=>setUsername(e.target.value)} required minLength={3} maxLength={30} placeholder="Username"/></label>}<label>Email<input type="email" value={email} onChange={e=>setEmail(e.target.value)} required placeholder="you@example.com"/></label><label>Password<input type="password" value={password} onChange={e=>setPassword(e.target.value)} required minLength={6}/></label><button className="button" disabled={busy}>{busy?'Working…':mode==='signup'?'Create Account':'Sign In'}</button></form>
+   <form onSubmit={submit} className="accountForm">{mode==='signup'&&<label>Public username<input value={username} onChange={e=>setUsername(e.target.value)} required minLength={3} maxLength={30} pattern="[A-Za-z0-9_.-]+" title="Letters, numbers, underscores, periods, and hyphens only. No spaces." placeholder="Username"/></label>}<label>Email<input type="email" value={email} onChange={e=>setEmail(e.target.value)} required placeholder="you@example.com"/></label><label>Password<input type="password" value={password} onChange={e=>setPassword(e.target.value)} required minLength={6}/></label><button className="button" disabled={busy}>{busy?'Working…':mode==='signup'?'Create Account':'Sign In'}</button></form>
    {mode==='signin'&&<button className="linkButton" onClick={reset}>Forgot password?</button>}{msg&&<div className="notice">{msg}</div>}
  </div>
 }
