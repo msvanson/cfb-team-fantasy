@@ -192,6 +192,41 @@ export function AdminPanel({teams}){
   </div>}
   {espnFutures&&!espnFutures.ok&&<div className="notice">{espnFutures.error}</div>}
 </div>
+
+{weeklyOddsTest&&<div className="card" style={{marginTop:12}}>
+  <div className="qaTop">
+    <div>
+      <b>Weekly Odds Raw Diagnostic</b>
+      <div className="muted">Exact discovery/event results from the latest test. Pregame means not started; live means actually in progress.</div>
+    </div>
+  </div>
+  <div style={{display:'grid',gap:10,marginTop:12}}>
+    <div className="card">
+      <b>Selected sport / league</b>
+      <pre style={{whiteSpace:'pre-wrap',wordBreak:'break-word',fontSize:12}}>{JSON.stringify(weeklyOddsTest.selected||weeklyOddsTest.discovery||null,null,2)}</pre>
+    </div>
+    <div className="card">
+      <b>Pending league query</b>
+      <pre style={{whiteSpace:'pre-wrap',wordBreak:'break-word',fontSize:12}}>{JSON.stringify(weeklyOddsTest.pregame?.pendingLeagueQuery||weeklyOddsTest.pregame||null,null,2)}</pre>
+    </div>
+    <div className="card">
+      <b>No-status league query</b>
+      <pre style={{whiteSpace:'pre-wrap',wordBreak:'break-word',fontSize:12}}>{JSON.stringify(weeklyOddsTest.pregame?.noStatusLeagueQuery||null,null,2)}</pre>
+    </div>
+    <div className="card">
+      <b>Pending whole-sport query</b>
+      <pre style={{whiteSpace:'pre-wrap',wordBreak:'break-word',fontSize:12}}>{JSON.stringify(weeklyOddsTest.pregame?.pendingWholeSportQuery||null,null,2)}</pre>
+    </div>
+    <div className="card">
+      <b>Selected pregame event odds</b>
+      <pre style={{whiteSpace:'pre-wrap',wordBreak:'break-word',fontSize:12}}>{JSON.stringify(weeklyOddsTest.pregame?.selectedEventOdds||null,null,2)}</pre>
+    </div>
+    <div className="card">
+      <b>Live query</b>
+      <pre style={{whiteSpace:'pre-wrap',wordBreak:'break-word',fontSize:12}}>{JSON.stringify(weeklyOddsTest.live||null,null,2)}</pre>
+    </div>
+  </div>
+</div>}
 <div className="sectionTitle"><h2>Projection QA</h2><span className="muted">Latest saved projection run</span></div>
 <div className="card">
   <div className="qaTop">
