@@ -1,8 +1,3 @@
-
-  const [accountData,setAccountData]=useState(null);
-  const [accountMsg,setAccountMsg]=useState('');
-  async function loadAccounts(){const r=await fetch('/api/admin/accounts',{cache:'no-store'});const j=await r.json();setAccountData(j);if(!r.ok)setAccountMsg(j.error||'Could not load accounts');}
-  async function assignAccount(user_id,owner_id,role){setAccountMsg('Saving…');const r=await fetch('/api/admin/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id,owner_id,role})});const j=await r.json();setAccountMsg(j.ok?'Saved.':j.error||'Save failed');if(j.ok)loadAccounts();}
 'use client';
 import { useEffect,useState } from 'react';
 
@@ -33,6 +28,11 @@ export function Login(){
 }
 
 export function AdminPanel({teams}){
+  const [accountData,setAccountData]=useState(null);
+  const [accountMsg,setAccountMsg]=useState('');
+  async function loadAccounts(){const r=await fetch('/api/admin/accounts',{cache:'no-store'});const j=await r.json();setAccountData(j);if(!r.ok)setAccountMsg(j.error||'Could not load accounts');}
+  async function assignAccount(user_id,owner_id,role){setAccountMsg('Saving…');const r=await fetch('/api/admin/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id,owner_id,role})});const j=await r.json();setAccountMsg(j.ok?'Saved.':j.error||'Save failed');if(j.ok)loadAccounts();}
+
   const [msg,setMsg]=useState('');
   const [qa,setQa]=useState(null);
   const [sdio,setSdio]=useState(null);const [projResult,setProjResult]=useState(null);const [projectionQa,setProjectionQa]=useState(null);const [espnFutures,setEspnFutures]=useState(null);const [weeklyOddsTest,setWeeklyOddsTest]=useState(null);const [winTotalsInspect,setWinTotalsInspect]=useState(null);
