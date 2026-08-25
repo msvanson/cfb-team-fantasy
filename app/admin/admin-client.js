@@ -30,7 +30,7 @@ export function Login(){
 export function AdminPanel({teams}){
   const [msg,setMsg]=useState('');
   const [qa,setQa]=useState(null);
-  const [sdio,setSdio]=useState(null);const [projResult,setProjResult]=useState(null);const [projectionQa,setProjectionQa]=useState(null);const [espnFutures,setEspnFutures]=useState(null);const [winTotalsInspect,setWinTotalsInspect]=useState(null);
+  const [sdio,setSdio]=useState(null);const [projResult,setProjResult]=useState(null);const [projectionQa,setProjectionQa]=useState(null);const [espnFutures,setEspnFutures]=useState(null);const [weeklyOddsTest,setWeeklyOddsTest]=useState(null);const [winTotalsInspect,setWinTotalsInspect]=useState(null);
   const [health,setHealth]=useState(null);
   const [audit,setAudit]=useState([]);
   const [teamId,setTeamId]=useState(teams[0]?.team_id||'');
@@ -60,6 +60,8 @@ export function AdminPanel({teams}){
   async function refreshProjections(){setMsg('Refreshing projections…');const r=await fetch('/api/admin/projections',{method:'POST'});const j=await r.json();setProjResult(j);setMsg(r.ok?'Projection refresh complete':(j.error||'Projection refresh failed'))}
 
   async function inspectWinTotals(){setMsg('Inspecting 2026 win totals…');const r=await fetch('/api/admin/win-totals-inspector',{cache:'no-store'});const j=await r.json();setWinTotalsInspect(j);setMsg(r.ok?'Win totals inspection complete':(j.error||'Win totals inspection failed'))}
+
+  async function testWeeklyOdds(){setMsg('Testing NCAAF weekly odds…');const r=await fetch('/api/admin/weekly-odds-test',{cache:'no-store'});const j=await r.json();setWeeklyOddsTest(j);setMsg(r.ok?'Weekly odds test complete':(j.error||'Weekly odds test failed'))}
 
   async function inspectEspnFutures(){setMsg('Inspecting ESPN 2026 futures…');const r=await fetch('/api/admin/espn-futures',{cache:'no-store'});const j=await r.json();setEspnFutures(j);setMsg(r.ok?'ESPN futures inspection complete':(j.error||'ESPN futures inspection failed'))}
 
@@ -161,6 +163,21 @@ export function AdminPanel({teams}){
   <div className="sdioShape"><b>Sample matched totals</b>{(winTotalsInspect.samples||[]).map((x,i)=><div className="muted" key={i}>{x.school}: {x.line} · O {x.over>0?'+':''}{x.over} / U {x.under>0?'+':''}{x.under} · adjusted {Number(x.adjustedWins).toFixed(2)}</div>)}</div>
  </div>}
  {winTotalsInspect&&!winTotalsInspect.ok&&<div className="notice">{winTotalsInspect.error}</div>}
+</div>
+<div className="sectionTitle"><h2>Weekly Odds Test</h2><span className="muted">NCAAF · DraftKings + FanDuel</span></div>
+<div className="card">
+  <div className="qaTop">
+    <div><b>Test free weekly betting feed</b><div className="muted">Checks NCAAF event access, pregame moneylines, and whether the free key exposes in-play events/odds.</div></div>
+    <button className="button" onClick={testWeeklyOdds}>Test Weekly Odds</button>
+  </div>
+  {weeklyOddsTest?.ok&&<div className="qaList">
+    <div className="qaRow"><span className="qaBadge pass">PASS</span><div><b>API key + NCAAF league</b><div className="muted">{weeklyOddsTest.league?.name} · {weeklyOddsTest.league?.slug}</div></div></div>
+    <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.pending?.moneylineEntries>0?'pass':'warning')}>{weeklyOddsTest.pending?.moneylineEntries>0?'PASS':'CHECK'}</span><div><b>Pregame moneylines</b><div className="muted">{weeklyOddsTest.pending?.eventCount??0} upcoming events · {weeklyOddsTest.pending?.moneylineEntries??0} DraftKings/FanDuel moneyline entries in sampled games</div></div></div>
+    <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.live?.conclusion==='live-moneylines-confirmed'?'pass':weeklyOddsTest.live?.conclusion==='blocked'?'fail':'warning')}>{weeklyOddsTest.live?.conclusion==='live-moneylines-confirmed'?'PASS':weeklyOddsTest.live?.conclusion==='blocked'?'FAIL':'CHECK'}</span><div><b>Live/in-play odds</b><div className="muted">{weeklyOddsTest.live?.conclusion==='live-moneylines-confirmed'?'Live moneylines confirmed on the free key.':weeklyOddsTest.live?.conclusion==='no-live-games-to-test'?'Live endpoint works, but there are no NCAAF games live right now to verify in-play moneylines.':weeklyOddsTest.live?.conclusion==='blocked'?'The live endpoint is blocked for this key.':'Live events were found but DraftKings/FanDuel moneylines were not returned.'}</div></div></div>
+    {(weeklyOddsTest.pending?.samples||[]).map((x,i)=><div className="card" key={'p'+i}><b>{x.away} @ {x.home}</b><div className="muted">{x.date} · {x.status}</div><div className="muted wrapText">{JSON.stringify(x.moneylines)}</div></div>)}
+    {(weeklyOddsTest.live?.samples||[]).map((x,i)=><div className="card" key={'l'+i}><b>LIVE · {x.away} @ {x.home}</b><div className="muted">{x.status}</div><div className="muted wrapText">{JSON.stringify(x.moneylines)}</div></div>)}
+  </div>}
+  {weeklyOddsTest&&!weeklyOddsTest.ok&&<div className="notice">{weeklyOddsTest.error}</div>}
 </div>
 <div className="sectionTitle"><h2>ESPN Futures Inspector</h2><span className="muted">2026 · free ESPN futures feed</span></div>
 <div className="card">
