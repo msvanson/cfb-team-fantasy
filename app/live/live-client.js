@@ -55,9 +55,13 @@ export default function LiveClient(){
   const liveCount=games.filter(g=>!g.completed&&g.status==='in_progress').length;
 
   return <div>
+    <div className="liveWeekHeading">
+      <h1>{data.weekKey||'Current Week'}</h1>
+      <div className="muted">{data.weekDates||''}</div>
+    </div>
     <div className="liveHero card">
       <div><div className="muted">Games Currently Live</div><div className="liveHeroNumber">{liveCount}</div></div>
-      <div className="muted">{data.weekKey||'Current Week'} · updates every minute</div>
+      <div className="muted">Updates every minute</div>
     </div>
 
     <div className="sectionTitle"><h2>This Week</h2><span className="muted">Live fantasy standings</span></div>

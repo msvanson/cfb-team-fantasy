@@ -63,3 +63,5 @@
  .liveWeeklyTable th,.liveWeeklyTable td{padding-left:8px;padding-right:8px}
  .liveHeroNumber{font-size:38px}
 }
+
+.liveWeekHeading{margin:18px 0 12px}.liveWeekHeading h1{margin:0;font-size:30px;line-height:1.1}.liveWeekHeading .muted{margin-top:4px;font-size:13px}

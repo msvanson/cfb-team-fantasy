@@ -1,6 +1,7 @@
 import {NextResponse} from 'next/server';
 import {isAdminAuthenticated} from '../../../../lib/admin-auth';
 import {createClient} from '@supabase/supabase-js';
+import {currentFantasyWeek} from '../../../../lib/fantasy-weeks';
 
 const BASE='https://api.odds-api.io/v3';
 const supabase=createClient(
@@ -32,8 +33,8 @@ export async function GET(){
  if(!process.env.SUPABASE_SERVICE_ROLE_KEY)return NextResponse.json({ok:false,error:'SUPABASE_SERVICE_ROLE_KEY missing'},{status:500});
  const key=process.env.ODDS_API_KEY;
  try{
-  const now=new Date(),to=new Date(now.getTime()+8*24*3600000).toISOString();
-  const {data:games,error:ge}=await supabase.from('games').select('cfbd_game_id,start_time,home_team_id,away_team_id,completed').gte('start_time',now.toISOString()).lte('start_time',to).eq('season_id',1).eq('completed',false).order('start_time');if(ge)throw ge;
+  const fantasyWeek=currentFantasyWeek(new Date());
+  const {data:games,error:ge}=await supabase.from('games').select('cfbd_game_id,start_time,home_team_id,away_team_id,completed').gte('start_time',fantasyWeek.start).lt('start_time',fantasyWeek.end).eq('season_id',1).eq('completed',false).order('start_time');if(ge)throw ge;
   const ids=[...new Set((games||[]).flatMap(g=>[g.home_team_id,g.away_team_id]).filter(Boolean))];
   const {data:teams,error:te}=await supabase.from('team_directory').select('team_id,school,mascot,owner_id,owner_name,is_owned').eq('season_id',1).in('team_id',ids);if(te)throw te;
   const tm=new Map((teams||[]).map(t=>[t.team_id,t]));

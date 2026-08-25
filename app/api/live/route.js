@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { syncCfbd } from '../../../lib/cfbd';
+import { currentFantasyWeek } from '../../../lib/fantasy-weeks';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,8 +20,9 @@ export async function GET(request) {
   catch (error) { sync = { ok:false, error:error?.message || String(error) }; }
 
   const now = new Date();
-  const from = new Date(now.getTime() - 18*60*60*1000).toISOString();
-  const to = new Date(now.getTime() + 30*60*60*1000).toISOString();
+  const fantasyWeek = currentFantasyWeek(now);
+  const from = fantasyWeek.start;
+  const to = fantasyWeek.end;
 
   const [
     {data:games,error:gameError},
@@ -59,10 +61,9 @@ export async function GET(request) {
     projection:oddsByGame.get(String(g.cfbd_game_id))||null
   })).filter(g=>g.home.is_owned||g.away.is_owned);
 
-  // Current week is taken from the nearest game in the live window.
-  const withWeek=decorated.filter(g=>g.week!=null);
-  const currentWeek=withWeek.length ? Number(withWeek[0].week) : null;
-  const weekKey=currentWeek!=null ? `Week ${currentWeek}` : null;
+  const currentWeek = fantasyWeek.label;
+  const weekKey = fantasyWeek.key;
+  const weekDates = fantasyWeek.dates;
 
   const actualByOwner=new Map();
   if(weekKey){
@@ -103,6 +104,7 @@ export async function GET(request) {
     totalGames:totalGames||0,
     currentWeek,
     weekKey,
+    weekDates,
     sync,
     weeklyStandings,
     games:decorated
