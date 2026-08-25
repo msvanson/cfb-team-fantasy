@@ -78,3 +78,5 @@
 .game-team .teamNameWithLogo .schoolLogo{width:24px;height:24px}
 .rosterRow .teamNameWithLogo .schoolLogo{width:20px;height:20px}
 @media(max-width:640px){.schoolLogo{width:19px;height:19px}.game-team .teamNameWithLogo .schoolLogo{width:22px;height:22px}}
+
+.accountCard{max-width:620px;margin:0 auto}.authTabs{display:flex;gap:8px;margin-bottom:18px}.accountForm{display:grid;gap:14px}.accountForm label{display:grid;gap:6px;font-weight:700}.accountForm input,.accountAssign select{width:100%;box-sizing:border-box;background:var(--panel,#111827);color:inherit;border:1px solid rgba(255,255,255,.18);border-radius:8px;padding:11px}.accountGrid{display:grid;grid-template-columns:120px 1fr;gap:10px 14px;margin:16px 0}.accountGrid span{opacity:.7}.linkButton{background:none;border:0;color:inherit;text-decoration:underline;padding:12px 0;cursor:pointer}.accountAssign{display:flex;gap:8px;min-width:300px}@media(max-width:640px){.accountAssign{min-width:0;flex-direction:column}.accountGrid{grid-template-columns:100px 1fr}}

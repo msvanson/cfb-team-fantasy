@@ -1,4 +1,0 @@
-School logos v1
-Source: ESPN public college-football teams endpoint, server cached 7 days.
-Reusable TeamName component adds logos to user-facing school-name displays.
-Logo failures gracefully fall back to text only.

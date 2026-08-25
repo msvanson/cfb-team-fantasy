@@ -1,3 +1,8 @@
+
+  const [accountData,setAccountData]=useState(null);
+  const [accountMsg,setAccountMsg]=useState('');
+  async function loadAccounts(){const r=await fetch('/api/admin/accounts',{cache:'no-store'});const j=await r.json();setAccountData(j);if(!r.ok)setAccountMsg(j.error||'Could not load accounts');}
+  async function assignAccount(user_id,owner_id,role){setAccountMsg('Saving…');const r=await fetch('/api/admin/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id,owner_id,role})});const j=await r.json();setAccountMsg(j.ok?'Saved.':j.error||'Save failed');if(j.ok)loadAccounts();}
 'use client';
 import { useEffect,useState } from 'react';
 
@@ -88,7 +93,11 @@ export function AdminPanel({teams}){
   }
 
   return <div>
-    <div className="sectionTitle"><h2>System Health</h2><span className="muted">Commissioner diagnostics</span></div>
+    <div className="sectionTitle"><h2>Owner Accounts</h2><span className="muted">Assign signed-up users to league teams</span></div>
+<div className="card"><button className="button" onClick={loadAccounts}>Load Accounts</button>{accountMsg&&<div className="muted">{accountMsg}</div>}
+ {accountData?.profiles?.map(p=><div className="qaRow" key={p.user_id}><div><b>{p.username}</b><div className="muted">{p.email}</div></div><div className="accountAssign"><select value={p.owner_id||''} onChange={e=>assignAccount(p.user_id,e.target.value,p.role)}><option value="">Unassigned</option>{accountData.owners.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select><select value={p.role} onChange={e=>assignAccount(p.user_id,p.owner_id,e.target.value)}><option value="owner">Owner</option><option value="commissioner">Commissioner</option></select></div></div>)}
+</div>
+<div className="sectionTitle"><h2>System Health</h2><span className="muted">Commissioner diagnostics</span></div>
     <div className="adminHealth">
       <div className="card"><div className="muted">Tier 1 Live</div><div className="kpi">{health?.liveAvailable?'Yes':'—'}</div></div>
       <div className="card"><div className="muted">2026 Games</div><div className="kpi">{health?.gameCount??'—'}</div></div>
