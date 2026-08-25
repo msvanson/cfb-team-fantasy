@@ -21,7 +21,7 @@ export async function GET(){
   s.from('waiver_claims').select('*').eq('season_id',1).eq('waiver_period_key',key).eq('status','pending').order('priority'),
   s.from('team_directory').select('*').eq('season_id',1),
   s.from('owners').select('id,name,draft_slot').eq('season_id',1),
-  s.from('owner_standings_with_movement').select('*').eq('season_id',1)
+  s.from('official_waiver_order').select('*').eq('season_id',1).order('waiver_priority')
  ]);
  if(ce||te||oe||se)return NextResponse.json({ok:false,error:(ce||te||oe||se).message},{status:500});
  const teamMap=new Map((teams||[]).map(t=>[Number(t.team_id),t]));
@@ -30,12 +30,7 @@ export async function GET(){
  // We reproduce the league's official season standings rules here, then reverse the result:
  // fantasy points DESC -> season point differential DESC -> higher draft order (lower draft_slot) DESC.
  // This frozen reversed order is used for every round of the waiver run.
- const officialStandings=[...(standings||[])].sort((a,b)=>
-   Number(b.fantasy_points||0)-Number(a.fantasy_points||0)
-   || Number(b.point_differential||0)-Number(a.point_differential||0)
-   || Number(a.draft_slot||999)-Number(b.draft_slot||999)
- );
- const order=[...officialStandings].reverse();
+ const order=[...(standings||[])].sort((a,b)=>Number(a.waiver_priority)-Number(b.waiver_priority));
  const orderIndex=new Map(order.map((o,i)=>[Number(o.owner_id),i+1]));
  const rosters=new Map();
  for(const o of owners||[])rosters.set(Number(o.id),(teams||[]).filter(t=>Number(t.owner_id)===Number(o.id)).map(t=>({...t})));

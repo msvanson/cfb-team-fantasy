@@ -11,12 +11,11 @@ export async function POST(req){
  const [{data:claims,error:ce},{data:teams,error:te},{data:standings,error:se}]=await Promise.all([
   s.from('waiver_claims').select('*').eq('season_id',1).eq('waiver_period_key',key).eq('status','pending').order('priority'),
   s.from('team_directory').select('*').eq('season_id',1),
-  s.from('owner_standings_with_movement').select('*').eq('season_id',1)
+  s.from('official_waiver_order').select('*').eq('season_id',1).order('waiver_priority')
  ]);
  if(ce||te||se)return NextResponse.json({ok:false,error:(ce||te||se).message},{status:500});
  if(!(claims||[]).length)return NextResponse.json({ok:false,error:'No pending claims for '+key},{status:400});
- const official=[...(standings||[])].sort((a,b)=>Number(b.fantasy_points||0)-Number(a.fantasy_points||0)||Number(b.point_differential||0)-Number(a.point_differential||0)||Number(a.draft_slot||999)-Number(b.draft_slot||999));
- const order=[...official].reverse(), oi=new Map(order.map((o,i)=>[Number(o.owner_id),i+1])), tm=new Map((teams||[]).map(t=>[Number(t.team_id),t]));
+ const order=[...(standings||[])].sort((a,b)=>Number(a.waiver_priority)-Number(b.waiver_priority)), oi=new Map(order.map(o=>[Number(o.owner_id),Number(o.waiver_priority)])), tm=new Map((teams||[]).map(t=>[Number(t.team_id),t]));
  const rosters=new Map(order.map(o=>[Number(o.owner_id),(teams||[]).filter(t=>Number(t.owner_id)===Number(o.owner_id)).map(t=>({...t}))]));
  const q=new Map(order.map(o=>[Number(o.owner_id),(claims||[]).filter(c=>Number(c.owner_id)===Number(o.owner_id)).sort((a,b)=>a.priority-b.priority).map(c=>({...c}))]));
  const claimed=new Set(),plan=[],losers=[];let round=1,progress=true;
