@@ -28,6 +28,10 @@ export function Login(){
 }
 
 export function AdminPanel({teams}){
+  const [waiverPreview,setWaiverPreview]=useState(null);
+  const [waiverPreviewMsg,setWaiverPreviewMsg]=useState('');
+  async function previewWaivers(){setWaiverPreviewMsg('Building dry-run…');const r=await fetch('/api/admin/waiver-preview',{cache:'no-store'});const j=await r.json();setWaiverPreview(j);setWaiverPreviewMsg(r.ok?'Preview complete — no rosters were changed.':j.error||'Preview failed');}
+
   const [accountData,setAccountData]=useState(null);
   const [accountMsg,setAccountMsg]=useState('');
   async function loadAccounts(){const r=await fetch('/api/admin/accounts',{cache:'no-store'});const j=await r.json();setAccountData(j);if(!r.ok)setAccountMsg(j.error||'Could not load accounts');}
@@ -93,6 +97,14 @@ export function AdminPanel({teams}){
   }
 
   return <div>
+    <div className="sectionTitle"><h2>Waiver Run Preview</h2><span className="muted">Dry-run only — cannot change rosters</span></div>
+    <div className="card">
+      <div className="qaTop"><div><b>Preview round-based waivers</b><div className="muted">Cycles last place → first place, then returns to the top until no valid claims remain.</div></div><button className="button" onClick={previewWaivers}>Preview Waiver Run</button></div>
+      {waiverPreviewMsg&&<div className="notice">{waiverPreviewMsg}</div>}
+      {waiverPreview?.waiver_order?.length>0&&<div className="waiverPreviewOrder"><b>Frozen order:</b> {waiverPreview.waiver_order.map(x=>`${x.order}. ${x.owner}`).join(' → ')}</div>}
+      {waiverPreview?.steps?.map((x,i)=><div className={`waiverPreviewStep ${x.status}`} key={i}><b>Round {x.round} · #{x.waiver_order} {x.owner}</b><span>{x.status==='would_succeed'?'WOULD CLAIM':x.status==='lost_to_priority'?'SKIPPED':'INVALID'} {x.add} · drop {x.drop}</span>{x.competing_owners?.length?<small>Also claimed by: {x.competing_owners.join(', ')}</small>:null}{x.reason?<small>{x.reason}</small>:null}</div>)}
+      {waiverPreview?.summary&&<div className="muted">Would succeed: {waiverPreview.summary.successful} · Lost to priority: {waiverPreview.summary.lost} · Invalid: {waiverPreview.summary.invalid}</div>}
+    </div>
     <div className="sectionTitle"><h2>Owner Accounts</h2><span className="muted">Assign signed-up users to league teams</span></div>
 <div className="card"><button className="button" onClick={loadAccounts}>Load Accounts</button>{accountMsg&&<div className="muted">{accountMsg}</div>}
  {accountData?.profiles?.map(p=><div className="qaRow" key={p.user_id}><div><b>{p.username}</b><div className="muted">{p.email}</div></div><div className="accountAssign"><select value={p.owner_id||''} onChange={e=>assignAccount(p.user_id,e.target.value,p.role)}><option value="">Unassigned</option>{accountData.owners.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select><select value={p.role} onChange={e=>assignAccount(p.user_id,p.owner_id,e.target.value)}><option value="owner">Owner</option><option value="commissioner">Commissioner</option></select></div></div>)}
