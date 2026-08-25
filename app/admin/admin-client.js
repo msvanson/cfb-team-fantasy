@@ -164,15 +164,15 @@ export function AdminPanel({teams}){
  </div>}
  {winTotalsInspect&&!winTotalsInspect.ok&&<div className="notice">{winTotalsInspect.error}</div>}
 </div>
-<div className="sectionTitle"><h2>Weekly Odds Test</h2><span className="muted">Improved matcher · 1 API call</span></div>
+<div className="sectionTitle"><h2>Weekly Odds Test</h2><span className="muted">FBS + FCS matcher · 1 API call</span></div>
 <div className="card">
- <div className="qaTop"><div><b>Test FBS → Odds-API matching</b><div className="muted">One event-pool request; all team/date matching happens locally. No odds or live calls.</div></div><button className="button" onClick={testWeeklyOdds}>Run Matcher Test</button></div>
+ <div className="qaTop"><div><b>Test FBS and FBS-vs-FCS matching</b><div className="muted">One event-pool request. Two-sided FBS games and one-sided FBS-vs-FCS games are matched locally using team name + kickoff time.</div></div><button className="button" onClick={testWeeklyOdds}>Run Matcher Test</button></div>
  {weeklyOddsTest&&<div className="qaList">
   <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.ok?'pass':'fail')}>{weeklyOddsTest.ok?'PASS':'FAIL'}</span><div><b>Event pool</b><div className="muted">HTTP {weeklyOddsTest.httpStatus??'—'} · {weeklyOddsTest.eventPoolCount??0} events · {weeklyOddsTest.externalRequestsUsed??0} API call</div></div></div>
-  <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.matched===weeklyOddsTest.gamesChecked?'pass':'warning')}>{weeklyOddsTest.matched===weeklyOddsTest.gamesChecked?'PASS':'CHECK'}</span><div><b>FBS matchup matching</b><div className="muted">{weeklyOddsTest.matched??0} of {weeklyOddsTest.gamesChecked??0} matched · {weeklyOddsTest.missingLocalNames??0} missing local team names</div></div></div>
+  <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.matched===weeklyOddsTest.gamesChecked?'pass':'warning')}>{weeklyOddsTest.matched===weeklyOddsTest.gamesChecked?'PASS':'CHECK'}</span><div><b>Game matching</b><div className="muted">{weeklyOddsTest.matched??0} of {weeklyOddsTest.gamesChecked??0} matched · {weeklyOddsTest.twoSidedMatched??0} FBS/FBS · {weeklyOddsTest.oneSidedMatched??0} FBS/FCS</div></div></div>
   {(weeklyOddsTest.checks||[]).map((x,i)=><div className="card" key={'m'+i}>
-   <b>{x.away||'—'} @ {x.home||'—'}</b><div className="muted">{x.startTime}</div>
-   <div className="muted">Matched: {x.matched?'YES':'NO'}{x.matchScore?` · score ${x.matchScore}`:''}{x.reason?` · ${x.reason}`:''}</div>
+   <b>{x.away||'FCS opponent'} @ {x.home||'FCS opponent'}</b><div className="muted">{x.startTime}</div>
+   <div className="muted">Matched: {x.matched?'YES':'NO'}{x.matchMode?` · ${x.matchMode}`:''}{x.matchScore?` · score ${x.matchScore}`:''}</div>
    {x.event&&<div className="muted">Event {x.event.id}: {x.event.away} @ {x.event.home} · {x.event.date}</div>}
   </div>)}
  </div>}
