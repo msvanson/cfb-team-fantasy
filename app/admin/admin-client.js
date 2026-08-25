@@ -212,11 +212,6 @@ export function AdminPanel({teams}){
 
 
 
-      {x.odds&&<div className="muted wrapText">Odds response: {JSON.stringify(x.odds.raw)}</div>}
-    </div>)}
-    <div className="card"><b>Live endpoint</b><div className="muted">{weeklyOddsTest.live?.allAmericanFootballLive??0} American-football games live right now. Zero is normal if none are currently being played.</div></div>
-  </div>
-</div>}
 <div className="sectionTitle"><h2>Projection QA</h2><span className="muted">Latest saved projection run</span></div>
 <div className="card">
   <div className="qaTop">
