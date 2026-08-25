@@ -32,6 +32,19 @@ export function AdminPanel({teams}){
   const [ownershipMsg,setOwnershipMsg]=useState('');
   async function checkOwnershipScoring(){setOwnershipMsg('Checking ownership ledger…');const r=await fetch('/api/admin/ownership-scoring',{cache:'no-store'});const j=await r.json();setOwnershipCheck(j);setOwnershipMsg(r.ok?'Ownership-aware scoring ledger loaded.':j.error||'Check failed');}
 
+  const [waiverExecMsg,setWaiverExecMsg]=useState('');
+  const [waiverExecResult,setWaiverExecResult]=useState(null);
+  async function executeWaivers(){
+    if(!waiverPreview?.dry_run){setWaiverExecMsg('Run Preview Waiver Run first.');return}
+    if(!window.confirm('Execute the displayed waiver run? This WILL change rosters and ownership history.'))return;
+    const typed=window.prompt('Type EXECUTE to confirm the manual waiver run.');
+    if(typed!=='EXECUTE'){setWaiverExecMsg('Execution cancelled.');return}
+    setWaiverExecMsg('Executing waiver run…');
+    const r=await fetch('/api/admin/waiver-execute',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({confirm:'EXECUTE'})});
+    const j=await r.json();setWaiverExecResult(j);setWaiverExecMsg(r.ok?'Manual waiver run completed.':j.error||'Execution failed');
+    if(r.ok)setWaiverPreview(null);
+  }
+
   const [waiverPreview,setWaiverPreview]=useState(null);
   const [waiverPreviewMsg,setWaiverPreviewMsg]=useState('');
   async function previewWaivers(){setWaiverPreviewMsg('Building dry-run…');const r=await fetch('/api/admin/waiver-preview',{cache:'no-store'});const j=await r.json();setWaiverPreview(j);setWaiverPreviewMsg(r.ok?'Preview complete — no rosters were changed.':j.error||'Preview failed');}
@@ -117,7 +130,10 @@ export function AdminPanel({teams}){
       {waiverPreview?.waiver_order?.length>0&&<div className="waiverPreviewOrder"><b>Frozen order:</b> {waiverPreview.waiver_order.map(x=>`${x.order}. ${x.owner}`).join(' → ')}</div>}
       {waiverPreview?.rounds?.map(r=><div className="waiverRound" key={r.round}><h3>Round {r.round}</h3>{r.transactions.map((x,i)=><div className="waiverPreviewStep would_succeed" key={i}><b>#{x.waiver_order} {x.owner}</b><span>WOULD CLAIM {x.add} · drop {x.drop}</span>{x.competing_owners?.length?<small>Also claimed by: {x.competing_owners.join(', ')}</small>:null}</div>)}</div>)}
       {waiverPreview?.unsuccessful_claims?.length>0&&<details className="waiverClaimAudit"><summary>Skipped / invalid claims ({waiverPreview.unsuccessful_claims.length})</summary>{waiverPreview.unsuccessful_claims.map((x,i)=><div className={`waiverPreviewStep ${x.status}`} key={i}><b>{x.owner} · Claim #{x.claim_priority}</b><span>{x.status==='lost_to_priority'?'LOST TO PRIORITY':'INVALID'} · {x.add} · drop {x.drop}</span>{x.reason?<small>{x.reason}</small>:null}</div>)}</details>}
-      {waiverPreview?.summary&&<div className="muted">Would succeed: {waiverPreview.summary.successful} · Lost to priority: {waiverPreview.summary.lost} · Invalid: {waiverPreview.summary.invalid}</div>}
+      {waiverPreview?.summary&&<div className="muted">Would succeed: {waiverPreview.summary.successful} · Lost to priority: {waiverPreview.summary.lost} · Invalid: {waiverPreview.summary.invalid}</div>} 
+      {waiverPreview?.summary&&<div className="waiverExecuteBox"><button className="button" onClick={executeWaivers}>Execute Waiver Run</button><small>This is manual for Week 1. Preview first. Execution requires a second confirmation and typing EXECUTE.</small></div>}
+      {waiverExecMsg&&<div className="notice">{waiverExecMsg}</div>}
+      {waiverExecResult?.transactions?.length>0&&<details open className="waiverClaimAudit"><summary>Executed transactions ({waiverExecResult.transactions.length})</summary>{waiverExecResult.transactions.map((x,i)=><div className="waiverPreviewStep would_succeed" key={i}><b>Round {x.round} · {x.owner}</b><span>CLAIMED {x.add} · dropped {x.drop}</span><small>Transaction #{x.transaction_id}</small></div>)}</details>}
     </div>
     <div className="sectionTitle"><h2>Owner Accounts</h2><span className="muted">Assign signed-up users to league teams</span></div>
 <div className="card"><button className="button" onClick={loadAccounts}>Load Accounts</button>{accountMsg&&<div className="muted">{accountMsg}</div>}

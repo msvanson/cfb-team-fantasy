@@ -95,3 +95,5 @@
 .ownershipTotals{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:14px}.ownershipTotal{display:grid;gap:3px;padding:10px;border:1px solid rgba(255,255,255,.09);border-radius:8px}.ownershipTotal span{font-size:12px;opacity:.75}
 
 .ownershipCompare{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;margin:14px 0}
+
+.waiverExecuteBox{display:flex;align-items:center;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.1)}.waiverExecuteBox small{opacity:.7}
