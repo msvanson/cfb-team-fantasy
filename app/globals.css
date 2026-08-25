@@ -83,3 +83,5 @@
 
 .accountActions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
 @media(max-width:640px){.accountActions .button{width:100%}}
+
+.weeklyTieNote{font-size:12px;margin-top:8px}

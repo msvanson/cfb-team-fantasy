@@ -3,6 +3,20 @@ import { createClient } from '@supabase/supabase-js';
 import { syncCfbd } from '../../../lib/cfbd';
 import { currentFantasyWeek } from '../../../lib/fantasy-weeks';
 
+function compareWeeklyRank(a,b){
+  // Official weekly order:
+  // 1) fantasy points earned, 2) combined point differential, 3) higher draft order.
+  return Number(b.points_so_far||0)-Number(a.points_so_far||0)
+    || Number(b.weekly_point_diff||0)-Number(a.weekly_point_diff||0)
+    || Number(a.draft_slot||999)-Number(b.draft_slot||999);
+}
+function compareLiveDisplay(a,b){
+  // During an unfinished week, projection is useful for display only.
+  // Exact projected ties fall back to the official weekly ranking rules.
+  return Number(b.projected_points||0)-Number(a.projected_points||0) || compareWeeklyRank(a,b);
+}
+
+
 export const dynamic = 'force-dynamic';
 
 const supabase = createClient(
@@ -118,7 +132,9 @@ export async function GET(request) {
     const projected=actual+(projectedRemaining.get(o.id)||0);
     const max=actual+(maxRemaining.get(o.id)||0);
     return {owner_id:o.id,owner_name:o.name,draft_slot:o.draft_slot,points_so_far:actual,weekly_point_diff:weeklyPointDiff.get(o.id)||0,projected_points:projected,max_possible:max};
-  }).sort((a,b)=>b.projected_points-a.projected_points||b.points_so_far-a.points_so_far||a.draft_slot-b.draft_slot);
+  }).sort(compareLiveDisplay);
+
+  const officialWeeklyOrder=[...weeklyStandings].sort(compareWeeklyRank).map((r,i)=>({...r,official_weekly_rank:i+1}));
 
   return NextResponse.json({
     ok:Boolean(sync?.ok),
@@ -129,6 +145,7 @@ export async function GET(request) {
     weekDates,
     sync,
     weeklyStandings,
+    officialWeeklyOrder,
     games:decorated
   });
 }
