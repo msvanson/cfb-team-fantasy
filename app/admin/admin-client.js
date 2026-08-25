@@ -164,37 +164,17 @@ export function AdminPanel({teams}){
  </div>}
  {winTotalsInspect&&!winTotalsInspect.ok&&<div className="notice">{winTotalsInspect.error}</div>}
 </div>
-<div className="sectionTitle"><h2>Weekly Odds Test</h2><span className="muted">NCAAF · DraftKings + FanDuel</span></div>
+<div className="sectionTitle"><h2>Weekly Odds Test</h2><span className="muted">1-call diagnostic</span></div>
 <div className="card">
-  <div className="qaTop">
-    <div><b>Test free weekly betting feed</b><div className="muted">Checks NCAAF event access, pregame moneylines, and whether the free key exposes in-play events/odds.</div></div>
-    <button className="button" onClick={testWeeklyOdds}>Test Weekly Odds</button>
-  </div>
-  {weeklyOddsTest?.ok&&<div className="qaList">
-    <div className="qaRow"><span className="qaBadge pass">PASS</span><div><b>API key + NCAAF league</b><div className="muted">{weeklyOddsTest.league?.name} · {weeklyOddsTest.league?.slug}</div></div></div>
-    <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.pending?.moneylineEntries>0?'pass':'warning')}>{weeklyOddsTest.pending?.moneylineEntries>0?'PASS':'CHECK'}</span><div><b>Pregame moneylines</b><div className="muted">{weeklyOddsTest.pending?.eventCount??0} upcoming events · {weeklyOddsTest.pending?.moneylineEntries??0} DraftKings/FanDuel moneyline entries in sampled games</div></div></div>
-    <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.live?.conclusion==='live-moneylines-confirmed'?'pass':weeklyOddsTest.live?.conclusion==='blocked'?'fail':'warning')}>{weeklyOddsTest.live?.conclusion==='live-moneylines-confirmed'?'PASS':weeklyOddsTest.live?.conclusion==='blocked'?'FAIL':'CHECK'}</span><div><b>Live/in-play odds</b><div className="muted">{weeklyOddsTest.live?.conclusion==='live-moneylines-confirmed'?'Live moneylines confirmed on the free key.':weeklyOddsTest.live?.conclusion==='no-live-games-to-test'?'Live endpoint works, but there are no NCAAF games live right now to verify in-play moneylines.':weeklyOddsTest.live?.conclusion==='blocked'?'The live endpoint is blocked for this key.':'Live events were found but DraftKings/FanDuel moneylines were not returned.'}</div></div></div>
-    {(weeklyOddsTest.pending?.samples||[]).map((x,i)=><div className="card" key={'p'+i}><b>{x.away} @ {x.home}</b><div className="muted">{x.date} · {x.status}</div><div className="muted wrapText">{JSON.stringify(x.moneylines)}</div></div>)}
-    {(weeklyOddsTest.live?.samples||[]).map((x,i)=><div className="card" key={'l'+i}><b>LIVE · {x.away} @ {x.home}</b><div className="muted">{x.status}</div><div className="muted wrapText">{JSON.stringify(x.moneylines)}</div></div>)}
-  </div>}
-  {weeklyOddsTest&&!weeklyOddsTest.ok&&<div className="notice">{weeklyOddsTest.error}</div>}
+<div className="qaTop"><div><b>Test upcoming FBS event matching</b><div className="muted">Exactly ONE Odds-API request. No odds or live calls.</div></div><button className="button" onClick={testWeeklyOdds}>Run 1-Call Test</button></div>
+{weeklyOddsTest&&<div className="qaList">
+<div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.ok?'pass':'fail')}>{weeklyOddsTest.ok?'PASS':'FAIL'}</span><div><b>USA - College event pool</b><div className="muted">HTTP {weeklyOddsTest.httpStatus??'—'} · {weeklyOddsTest.eventPoolCount??0} events · {weeklyOddsTest.externalRequestsUsed??0} API call</div></div></div>
+<div className="qaRow"><span className={'qaBadge '+((weeklyOddsTest.fbsGamesMatched||0)>0?'pass':'warning')}>{(weeklyOddsTest.fbsGamesMatched||0)>0?'PASS':'CHECK'}</span><div><b>FBS matches</b><div className="muted">{weeklyOddsTest.fbsGamesMatched??0} of {weeklyOddsTest.fbsGamesChecked??0} test games</div></div></div>
+{weeklyOddsTest.error&&<div className="notice">{weeklyOddsTest.error}</div>}
+{(weeklyOddsTest.checks||[]).map((x,i)=><div className="card" key={'oc'+i}><b>{x.away} @ {x.home}</b><div className="muted">{x.startTime}</div><div className="muted">Matched: {x.eventMatched?'YES':'NO'}{x.eventId?` · Event ID ${x.eventId}`:''}</div>{x.eventMatched&&<div className="muted">{x.apiAway} @ {x.apiHome}</div>}</div>)}
+</div>}
 </div>
 
-{weeklyOddsTest?.model&&<div className="card" style={{marginTop:12,marginBottom:18}}>
- <div className="qaTop"><div><b>Weekly Odds Diagnostic Results</b><div className="muted">{weeklyOddsTest.model}</div></div></div>
- <div className="qaList">
-  <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.eventPool?.count>0?'pass':'fail')}>{weeklyOddsTest.eventPool?.count>0?'PASS':'FAIL'}</span><div><b>USA - College event pool</b><div className="muted">{weeklyOddsTest.eventPool?.count??0} upcoming events returned · HTTP {weeklyOddsTest.eventPool?.httpStatus??'—'}</div></div></div>
-  <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.eventsMatched>0?'pass':'warning')}>{weeklyOddsTest.eventsMatched>0?'PASS':'CHECK'}</span><div><b>FBS schedule matches</b><div className="muted">{weeklyOddsTest.eventsMatched??0} of {weeklyOddsTest.upcomingGamesChecked??0} test games matched</div></div></div>
-  <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.oddsResponsesOk>0?'pass':'warning')}>{weeklyOddsTest.oddsResponsesOk>0?'PASS':'CHECK'}</span><div><b>DraftKings/FanDuel odds responses</b><div className="muted">{weeklyOddsTest.oddsResponsesOk??0} matched games returned an odds response</div></div></div>
-  {(weeklyOddsTest.checks||[]).map((x,i)=><div className="card" key={'oddscheck'+i}>
-   <b>{x.away} @ {x.home}</b><div className="muted">{x.startTime}</div>
-   <div className="muted">Event matched: {x.eventMatched?'YES':'NO'} · Odds HTTP: {x.odds?.httpStatus??'—'}</div>
-   {x.event&&<div className="muted wrapText">Matched: {x.event.away} @ {x.event.home} · {x.event.league?.name}</div>}
-   {x.odds&&<pre style={{whiteSpace:'pre-wrap',wordBreak:'break-word',fontSize:11}}>{JSON.stringify(x.odds.raw,null,2)}</pre>}
-  </div>)}
-  <div className="card"><b>Live endpoint</b><div className="muted">{weeklyOddsTest.live?.allAmericanFootballLive??0} American-football games currently live. Zero is normal when no games are underway.</div></div>
- </div>
-</div>}
 <div className="sectionTitle"><h2>ESPN Futures Inspector</h2><span className="muted">2026 · free ESPN futures feed</span></div>
 <div className="card">
   <div className="qaTop">
