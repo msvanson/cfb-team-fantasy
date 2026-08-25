@@ -164,15 +164,23 @@ export function AdminPanel({teams}){
  </div>}
  {winTotalsInspect&&!winTotalsInspect.ok&&<div className="notice">{winTotalsInspect.error}</div>}
 </div>
-<div className="sectionTitle"><h2>Weekly Odds Test</h2><span className="muted">1-call diagnostic</span></div>
+<div className="sectionTitle"><h2>Weekly Odds Test</h2><span className="muted">Request #2 · single event</span></div>
 <div className="card">
-<div className="qaTop"><div><b>Test upcoming FBS event matching</b><div className="muted">Exactly ONE Odds-API request. No odds or live calls.</div></div><button className="button" onClick={testWeeklyOdds}>Run 1-Call Test</button></div>
-{weeklyOddsTest&&<div className="qaList">
-<div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.ok?'pass':'fail')}>{weeklyOddsTest.ok?'PASS':'FAIL'}</span><div><b>USA - College event pool</b><div className="muted">HTTP {weeklyOddsTest.httpStatus??'—'} · {weeklyOddsTest.eventPoolCount??0} events · {weeklyOddsTest.externalRequestsUsed??0} API call</div></div></div>
-<div className="qaRow"><span className={'qaBadge '+((weeklyOddsTest.fbsGamesMatched||0)>0?'pass':'warning')}>{(weeklyOddsTest.fbsGamesMatched||0)>0?'PASS':'CHECK'}</span><div><b>FBS matches</b><div className="muted">{weeklyOddsTest.fbsGamesMatched??0} of {weeklyOddsTest.fbsGamesChecked??0} test games</div></div></div>
-{weeklyOddsTest.error&&<div className="notice">{weeklyOddsTest.error}</div>}
-{(weeklyOddsTest.checks||[]).map((x,i)=><div className="card" key={'oc'+i}><b>{x.away} @ {x.home}</b><div className="muted">{x.startTime}</div><div className="muted">Matched: {x.eventMatched?'YES':'NO'}{x.eventId?` · Event ID ${x.eventId}`:''}</div>{x.eventMatched&&<div className="muted">{x.apiAway} @ {x.apiHome}</div>}</div>)}
-</div>}
+ <div className="qaTop">
+  <div><b>Test NC State @ Virginia odds</b><div className="muted">Exactly ONE Odds-API request for event 70894634. Requests DraftKings + FanDuel only.</div></div>
+  <button className="button" onClick={testWeeklyOdds}>Run 1-Call Odds Test</button>
+ </div>
+ {weeklyOddsTest&&<div className="qaList">
+  <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.ok?'pass':'fail')}>{weeklyOddsTest.ok?'PASS':'FAIL'}</span><div><b>Single-event odds request</b><div className="muted">HTTP {weeklyOddsTest.httpStatus??'—'} · {weeklyOddsTest.externalRequestsUsed??0} API call · Event {weeklyOddsTest.requestedEventId||'—'}</div></div></div>
+  <div className="card">
+   <b>Requested bookmakers</b>
+   <div className="muted">{(weeklyOddsTest.requestedBookmakers||[]).join(' + ')}</div>
+  </div>
+  <div className="card">
+   <b>Raw odds response</b>
+   <pre style={{whiteSpace:'pre-wrap',wordBreak:'break-word',fontSize:11}}>{JSON.stringify(weeklyOddsTest.response??weeklyOddsTest.error??null,null,2)}</pre>
+  </div>
+ </div>}
 </div>
 
 <div className="sectionTitle"><h2>ESPN Futures Inspector</h2><span className="muted">2026 · free ESPN futures feed</span></div>
