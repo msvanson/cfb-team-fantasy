@@ -1,0 +1,1 @@
+import {Nav} from '../nav';import WaiversClient from './waivers-client';export const dynamic='force-dynamic';export default function Page(){return <main className="shell"><div className="topbar"><div><div className="brand">Waivers</div><div className="sub">Claim available teams while keeping a legal 11-team roster</div></div></div><Nav/><WaiversClient/></main>}
