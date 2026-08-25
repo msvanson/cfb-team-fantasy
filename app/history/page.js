@@ -1,10 +1,10 @@
-import {TeamName} from '../team-name';import {Nav} from '../nav';import {getWeeklyWinners,getOwnerWeeklySummary,getSeasonRecordBook,getAllStandings,getTeamDirectory,getWeeklySnapshots,getWeeklySnapshotGames} from '../../lib/data';import {finalizeEndedFantasyWeeks} from '../../lib/weekly-snapshots';export const dynamic='force-dynamic';
+import {TeamName} from '../team-name';import {Nav} from '../nav';import {getWeeklyWinners,getOwnerWeeklySummary,getSeasonRecordBook,getAllStandings,getTeamDirectory,getWeeklySnapshots,getWeeklySnapshotGames,getOwnerWeeklyRecordStats} from '../../lib/data';import {finalizeEndedFantasyWeeks} from '../../lib/weekly-snapshots';export const dynamic='force-dynamic';
 
 function weekOrder(k){if(!k)return 999;const m=String(k).match(/Week\s+(\d+)/i);if(m)return Number(m[1]);if(k==='Conference Championships')return 100;if(k==='CFP')return 101;if(k==='National Championship')return 102;if(k==='Postseason')return 103;return 999}
 
 export default async function History(){
  try{await finalizeEndedFantasyWeeks(new Date())}catch{}
- const [winners,summaries,seasons,allStandings,teams,snapshots,snapshotGames]=await Promise.all([getWeeklyWinners(),getOwnerWeeklySummary(),getSeasonRecordBook(),getAllStandings(),getTeamDirectory(),getWeeklySnapshots(),getWeeklySnapshotGames()]);
+ const [winners,summaries,seasons,allStandings,teams,snapshots,snapshotGames,weeklyStats]=await Promise.all([getWeeklyWinners(),getOwnerWeeklySummary(),getSeasonRecordBook(),getAllStandings(),getTeamDirectory(),getWeeklySnapshots(),getWeeklySnapshotGames(),getOwnerWeeklyRecordStats()]);
  const current=seasons.find(s=>s.is_active)||seasons[0];
  const currentWinners=winners.filter(w=>w.season_id===current?.season_id).sort((a,b)=>weekOrder(a.week_key)-weekOrder(b.week_key));
  const currentSummary=summaries.filter(s=>s.season_id===current?.season_id).sort((a,b)=>b.weekly_wins-a.weekly_wins||b.highest_weekly_score-a.highest_weekly_score);
@@ -39,8 +39,11 @@ export default async function History(){
    }):<div className="card liveEmpty">Week 1 will be finalized automatically after Sep 7 at 11:59 PM ET.</div>}
   </section>
 
-  <section className="section"><div className="sectionTitle"><h2>Weekly Wins Leaderboard</h2><span className="muted">Season-long prize performance</span></div>
-   <div className="tableWrap"><table className="table"><thead><tr><th>Owner</th><th>Weekly Wins</th><th>Best Week</th></tr></thead><tbody>{currentSummary.map(r=><tr key={r.owner_id}><td><b>{r.owner_name}</b></td><td>{r.weekly_wins}</td><td>{r.highest_weekly_score}</td></tr>)}</tbody></table></div>
+  <section className="section"><div className="sectionTitle"><h2>Weekly Performance</h2><span className="muted">Based on finalized weekly snapshots</span></div>
+   <div className="card"><div className="tableWrap"><table className="table weeklyStatsTable"><thead><tr><th>Owner</th><th>Weeks Won</th><th>Weeks Lost</th><th>Avg Finish</th><th>Weeks</th></tr></thead><tbody>
+    {weeklyStats.map(x=><tr key={x.owner_id}><td><b>{x.owner_name}</b></td><td>{x.weeks_won}</td><td>{x.weeks_lost}</td><td>{x.average_weekly_finish==null?'—':Number(x.average_weekly_finish).toFixed(2)}</td><td>{x.weeks_completed}</td></tr>)}
+   </tbody></table></div>
+   {!weeklyStats.some(x=>x.weeks_completed>0)&&<div className="muted weeklyStatsNote">Stats will populate after Week 1 is finalized.</div>}</div>
   </section>
 
   <section className="section"><div className="sectionTitle"><h2>Record Book</h2><span className="muted">Updates automatically</span></div>
