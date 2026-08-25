@@ -1,5 +1,6 @@
 'use client';
 import {useEffect,useState} from 'react';
+import {TeamName} from '../team-name';
 
 function gameState(g){
   if(g.completed)return 'FINAL';
