@@ -164,13 +164,13 @@ export function AdminPanel({teams}){
  </div>}
  {winTotalsInspect&&!winTotalsInspect.ok&&<div className="notice">{winTotalsInspect.error}</div>}
 </div>
-<div className="sectionTitle"><h2>Weekly Odds Test</h2><span className="muted">Projection preview</span></div>
+<div className="sectionTitle"><h2>Weekly Odds Test</h2><span className="muted">Supabase cache refresh</span></div>
 <div className="card">
- <div className="qaTop"><div><b>Build weekly projected win points</b><div className="muted">Uses the proven strict matcher, requests odds only for games involving rostered teams, removes vig, averages DraftKings/FanDuel, and does not save anything yet.</div></div><button className="button" onClick={testWeeklyOdds}>Preview Weekly Projections</button></div>
+ <div className="qaTop"><div><b>Refresh weekly odds cache</b><div className="muted">Stores weekly win probabilities in Supabase. No market = 50/50. Same owner on both teams = guaranteed 1.000 point.</div></div><button className="button" onClick={testWeeklyOdds}>Refresh Weekly Odds Cache</button></div>
  {weeklyOddsTest&&<div className="qaList">
-  <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.ok?'pass':'fail')}>{weeklyOddsTest.ok?'PASS':'FAIL'}</span><div><b>Projection run</b><div className="muted">{weeklyOddsTest.relevantGames??0} relevant games · {weeklyOddsTest.externalRequestsUsed??0} Odds-API calls · {weeklyOddsTest.windowDays??0}-day window</div></div></div>
+  <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.ok?'pass':'fail')}>{weeklyOddsTest.ok?'PASS':'FAIL'}</span><div><b>Cache refresh</b><div className="muted">{weeklyOddsTest.rowsSaved??0} rows saved · {weeklyOddsTest.externalRequestsUsed??0} Odds-API calls</div></div></div>
+  <div className="qaRow"><span className="qaBadge pass">INFO</span><div><b>Projection sources</b><div className="muted">{weeklyOddsTest.marketGames??0} market · {weeklyOddsTest.fallbackGames??0} fallback 50/50 · {weeklyOddsTest.sameOwnerGames??0} same-owner guaranteed</div></div></div>
   {weeklyOddsTest.ownerProjectedWinPoints&&<div className="card"><b>Projected win points by owner</b>{Object.entries(weeklyOddsTest.ownerProjectedWinPoints).sort((a,b)=>b[1]-a[1]).map(([n,p])=><div className="qaRow" key={n}><span><b>{n}</b></span><span>{Number(p).toFixed(3)}</span></div>)}</div>}
-  {(weeklyOddsTest.games||[]).map((x,i)=><div className="card" key={'wp'+i}><b>{x.game}</b><div className="muted">{x.mode} · Event {x.eventId||'—'}{x.books?` · ${x.books} book(s)`:''}</div>{x.homeProbability!=null&&<div className="muted">Home {(x.homeProbability*100).toFixed(1)}% · Away {(x.awayProbability*100).toFixed(1)}%</div>}{x.projected&&<div className="muted">{Object.entries(x.projected).map(([n,p])=>`${n}: +${Number(p).toFixed(3)}`).join(' · ')}</div>}</div>)}
   {weeklyOddsTest.error&&<div className="notice">{weeklyOddsTest.error}</div>}
  </div>}
 </div>
