@@ -1,117 +1,106 @@
 'use client';
-import { useEffect, useState } from 'react';
+import {useEffect,useState} from 'react';
 
-function gameState(g) {
-  if (g.completed) return 'FINAL';
-  if (g.status === 'in_progress') {
-    const q = g.period ? `Q${g.period}` : 'LIVE';
-    return g.clock ? `${q} ${g.clock}` : q;
+function gameState(g){
+  if(g.completed)return 'FINAL';
+  if(g.status==='in_progress'){
+    if(Number(g.period)>4)return `OT${Number(g.period)>5?` ${Number(g.period)-4}`:''}`;
+    const q=g.period?`${g.period}${g.period===1?'st':g.period===2?'nd':g.period===3?'rd':'th'} Quarter`:'LIVE';
+    return g.clock?`${q} · ${g.clock}`:q;
   }
-  if (!g.start_time) return 'Scheduled';
-  return new Date(g.start_time).toLocaleString([], {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit'
-  });
+  if(!g.start_time)return 'Scheduled';
+  return new Date(g.start_time).toLocaleString([],{weekday:'short',hour:'numeric',minute:'2-digit'});
 }
-
-function winnerClass(g, side) {
-  if (!g.completed) return '';
-  const home = Number(g.home_score ?? -1);
-  const away = Number(g.away_score ?? -1);
-  if (side === 'home' && home > away) return 'game-winner';
-  if (side === 'away' && away > home) return 'game-winner';
+function sortRank(g){
+  if(g.status==='in_progress'&&Number(g.period)>4)return 0;
+  if(g.status==='in_progress')return 5-Math.min(Number(g.period||1),4); // 4Q=1,3Q=2,2Q=3,1Q=4
+  if(g.completed)return 5;
+  return 6;
+}
+function gameSort(a,b){
+  const ra=sortRank(a),rb=sortRank(b);
+  if(ra!==rb)return ra-rb;
+  if(ra>=1&&ra<=4){
+    const ca=parseClock(a.clock),cb=parseClock(b.clock);
+    return ca-cb; // less time remaining first within a quarter
+  }
+  return new Date(a.start_time||0)-new Date(b.start_time||0);
+}
+function parseClock(c){const m=String(c||'').match(/(\d+):(\d+)/);return m?Number(m[1])*60+Number(m[2]):9999}
+function matchupClass(g){
+  if(g.home.is_owned&&g.away.is_owned){
+    return g.home.owner_id===g.away.owner_id?'matchup-same-owner':'matchup-rival-owners';
+  }
   return '';
 }
+function teamClass(t){return t?.is_owned?'owned-team-row':''}
 
-export default function LiveClient() {
-  const [data, setData] = useState({ games: [], sync: null, totalGames: 0, updatedAt: null, ownerProjected: {} });
-  const [loading, setLoading] = useState(true);
-  const [requestError, setRequestError] = useState(null);
+export default function LiveClient(){
+  const [data,setData]=useState({games:[],weeklyStandings:[],sync:null,totalGames:0,updatedAt:null});
+  const [loading,setLoading]=useState(true);
+  const [requestError,setRequestError]=useState(null);
 
-  async function refresh(force = false) {
-    try {
+  async function refresh(force=false){
+    try{
       setRequestError(null);
-      const res = await fetch(`/api/live${force ? '?force=1' : ''}`, { cache: 'no-store' });
-      const json = await res.json();
-      setData(json);
-      if (!res.ok) setRequestError(json.error || `Request failed (${res.status})`);
-    } catch (error) {
-      setRequestError(error?.message || String(error));
-    } finally {
-      setLoading(false);
-    }
+      const res=await fetch(`/api/live${force?'?force=1':''}`,{cache:'no-store'});
+      const json=await res.json();setData(json);
+      if(!res.ok)setRequestError(json.error||`Request failed (${res.status})`);
+    }catch(e){setRequestError(e?.message||String(e))}
+    finally{setLoading(false)}
   }
+  useEffect(()=>{refresh(true);const id=setInterval(()=>refresh(false),60000);return()=>clearInterval(id)},[]);
 
-  useEffect(() => {
-    refresh(true);
-    const id = setInterval(() => refresh(false), 60000);
-    return () => clearInterval(id);
-  }, []);
-
-  const games = data.games || [];
-  const liveCount = games.filter(g => !g.completed && g.status === 'in_progress').length;
-  const finalCount = games.filter(g => g.completed).length;
+  const games=[...(data.games||[])].sort(gameSort);
+  const liveCount=games.filter(g=>!g.completed&&g.status==='in_progress').length;
 
   return <div>
-    <div className="liveHeaderGrid">
-      <div className="card">
-        <div className="muted">Feed Status</div>
-        <div className="liveStatusGood">● Live</div>
-        <div className="muted">CFBD Tier 1 connected</div>
-      </div>
-      <div className="card">
-        <div className="muted">Games Live Now</div>
-        <div className="kpi">{liveCount}</div>
-      </div>
-      <div className="card">
-        <div className="muted">Finals In Window</div>
-        <div className="kpi">{finalCount}</div>
-      </div>
+    <div className="liveHero card">
+      <div><div className="muted">Games Currently Live</div><div className="liveHeroNumber">{liveCount}</div></div>
+      <div className="muted">{data.weekKey||'Current Week'} · updates every minute</div>
+    </div>
+
+    <div className="sectionTitle"><h2>This Week</h2><span className="muted">Live fantasy standings</span></div>
+    <div className="tableWrap">
+      <table className="table liveWeeklyTable">
+        <thead><tr><th>#</th><th>Owner</th><th>Pts So Far</th><th>Projected</th><th>Max Possible</th></tr></thead>
+        <tbody>{(data.weeklyStandings||[]).map((r,i)=><tr key={r.owner_id}>
+          <td>{i+1}</td><td><b>{r.owner_name}</b></td><td>{Number(r.points_so_far).toFixed(1)}</td><td><b>{Number(r.projected_points).toFixed(2)}</b></td><td>{Number(r.max_possible).toFixed(1)}</td>
+        </tr>)}</tbody>
+      </table>
     </div>
 
     <div className="liveMeta">
-      <span>Auto-refreshes every minute while open</span>
-      <span>Last checked: {data.updatedAt ? new Date(data.updatedAt).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) : '—'}</span>
+      <span>{liveCount} live · {games.filter(g=>g.completed).length} final · {games.filter(g=>!g.completed&&g.status!=='in_progress').length} upcoming</span>
+      <span>Last checked: {data.updatedAt?new Date(data.updatedAt).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'—'}</span>
     </div>
 
-    <div className="sectionTitle"><h2>This Week — Projected Win Points</h2><span className="muted">Cached weekly projections</span></div>
-    <div className="card">
-      {Object.entries(data.ownerProjected || {}).sort((a,b)=>b[1]-a[1]).map(([owner,pts],i)=>
-        <div className="qaRow" key={owner}><span><b>{i+1}. {owner}</b></span><span><b>{Number(pts).toFixed(3)}</b></span></div>
-      )}
-    </div>
+    {requestError&&<div className="notice">Live feed issue: {requestError}</div>}
+    {data.sync?.error&&<div className="notice">Sync issue: {data.sync.error}</div>}
+    {data.sync?.reason==='throttled'&&<div className="muted liveThrottle">A recent sync is being reused to conserve API calls.</div>}
 
-    {requestError && <div className="notice">Live feed issue: {requestError}</div>}
-    {data.sync?.error && <div className="notice">Sync issue: {data.sync.error}</div>}
-    {data.sync?.reason === 'throttled' && <div className="muted liveThrottle">A recent sync is being reused to conserve API calls.</div>}
-
-    {games.length === 0 && !loading
-      ? <div className="card liveEmpty">No drafted-team games in the current live window.</div>
-      : null}
-
+    <div className="sectionTitle"><h2>Games</h2><span className="muted">OT → 4Q → 3Q → 2Q → 1Q → Final → Upcoming</span></div>
+    {games.length===0&&!loading?<div className="card liveEmpty">No rostered-team games in the current window.</div>:null}
     <div className="game-list">
-      {games.map(g => <div className="card game-card" key={g.cfbd_game_id}>
+      {games.map(g=><div className={`card game-card ${matchupClass(g)}`} key={g.cfbd_game_id}>
         <div className="game-status">{gameState(g)}</div>
 
-        <div className={`game-team ${winnerClass(g,'away')}`}>
+        <div className={`game-team ${teamClass(g.away)}`}>
           <span>
+            {g.away.owner_name?<small className="game-owner">{g.away.owner_name}</small>:null}
             <strong>{g.away.school}</strong>
-            {g.away.owner_name ? <small>{g.away.owner_name}</small> : null}
           </span>
-          <b>{g.away_score ?? '—'}</b>
+          <b>{g.away_score??'—'}</b>
         </div>
 
-        <div className={`game-team ${winnerClass(g,'home')}`}>
+        <div className={`game-team ${teamClass(g.home)}`}>
           <span>
+            {g.home.owner_name?<small className="game-owner">{g.home.owner_name}</small>:null}
             <strong>{g.home.school}</strong>
-            {g.home.owner_name ? <small>{g.home.owner_name}</small> : null}
           </span>
-          <b>{g.home_score ?? '—'}</b>
+          <b>{g.home_score??'—'}</b>
         </div>
       </div>)}
     </div>
-  </div>;
+  </div>
 }
