@@ -2,11 +2,11 @@
   "crons": [
     {
       "path": "/api/cron/projections",
-      "schedule": "0 9-10 * * 0"
+      "schedule": "0 9 * * 0"
     },
     {
       "path": "/api/cron/standings-snapshot",
-      "schedule": "0 10-11 * * 0"
+      "schedule": "0 10 * * 0"
     }
   ]
 }
