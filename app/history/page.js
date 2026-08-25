@@ -1,4 +1,4 @@
-import {Nav} from '../nav';import {getWeeklyWinners,getOwnerWeeklySummary,getSeasonRecordBook,getAllStandings,getTeamDirectory} from '../../lib/data';export const dynamic='force-dynamic';
+import {TeamName} from '../team-name';import {Nav} from '../nav';import {getWeeklyWinners,getOwnerWeeklySummary,getSeasonRecordBook,getAllStandings,getTeamDirectory} from '../../lib/data';export const dynamic='force-dynamic';
 
 function weekOrder(k){if(!k)return 999;const m=String(k).match(/Week\s+(\d+)/i);if(m)return Number(m[1]);if(k==='Conference Championships')return 100;if(k==='CFP')return 101;if(k==='National Championship')return 102;if(k==='Postseason')return 103;return 999}
 
@@ -37,7 +37,7 @@ export default async function History(){
     <div className="card"><b>Highest Season Score</b><div className="recordValue">{current?.leader_points??0}</div><div className="muted">{current?.leader_owner_name||'—'} · current {current?.year||2026}</div></div>
     <div className="card"><b>Highest Weekly Score</b><div className="recordValue">{highWeekly||'—'}</div><div className="muted">{highWeekRows.length?highWeekRows.map(x=>x.owner_name).join(' / '):'Not established'}</div></div>
     <div className="card"><b>Most Weekly Wins</b><div className="recordValue">{mostWins||'—'}</div><div className="muted">{mostWinsOwners.length?mostWinsOwners.map(x=>x.owner_name).join(' / '):'Not established'}</div></div>
-    <div className="card"><b>Best Individual Team Season</b><div className="recordValue">{current?.top_team_points??0}</div><div className="muted">{topTeam?.school||current?.top_team_name||'—'}</div></div>
+    <div className="card"><b>Best Individual Team Season</b><div className="recordValue">{current?.top_team_points??0}</div><div className="muted"><TeamName school={topTeam?.school||current?.top_team_name||'—'} size="sm"/></div></div>
    </div>
   </section>
 

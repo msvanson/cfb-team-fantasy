@@ -69,3 +69,12 @@
 .game-team-name-line{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .win-probability{font-size:12px;font-weight:800;opacity:.88;white-space:nowrap}
 .fallback-odds-note{font-size:11px;opacity:.68;margin-top:7px}
+
+.teamNameWithLogo{display:inline-flex;align-items:center;gap:7px;vertical-align:middle;min-width:0}
+.schoolLogo,.schoolLogoPlaceholder{width:22px;height:22px;object-fit:contain;flex:0 0 auto}
+.schoolLogoPlaceholder{display:none}
+.teamName-sm{gap:6px}.teamName-sm .schoolLogo,.teamName-sm .schoolLogoPlaceholder{width:18px;height:18px}
+.teamName-lg{gap:9px}.teamName-lg .schoolLogo,.teamName-lg .schoolLogoPlaceholder{width:30px;height:30px}
+.game-team .teamNameWithLogo .schoolLogo{width:24px;height:24px}
+.rosterRow .teamNameWithLogo .schoolLogo{width:20px;height:20px}
+@media(max-width:640px){.schoolLogo{width:19px;height:19px}.game-team .teamNameWithLogo .schoolLogo{width:22px;height:22px}}

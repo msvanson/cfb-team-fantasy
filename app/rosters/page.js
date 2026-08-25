@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import {TeamName} from '../team-name';import Link from 'next/link';
 import {Nav} from '../nav';
 import {getTeamDirectory,getStandings,getLatestTeamProjections,getOwnerProjectionTotals} from '../../lib/data';
 export const dynamic='force-dynamic';
@@ -50,7 +50,7 @@ export default async function Page(){
             {ts.sort((a,b)=>a.conference_display_order-b.conference_display_order).map(t=>
               <div className="rosterRow" key={t.team_id}>
                 <span>
-                  <Link className="teamLink" href={`/teams/${t.team_id}`}><b>{t.school}</b></Link>
+                  <Link className="teamLink" href={`/teams/${t.team_id}`}><b><TeamName team={t} size="sm"/></b></Link>
                   <small>{t.conference_code}</small>
                 </span>
                 <span className="rosterProjectionStats">

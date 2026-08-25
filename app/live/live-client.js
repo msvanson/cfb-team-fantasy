@@ -98,7 +98,7 @@ export default function LiveClient(){
         <div className={`game-team ${teamClass(g.away)}`}>
           <span>
             {g.away.owner_name?<small className="game-owner">{g.away.owner_name}</small>:null}
-            <span className="game-team-name-line"><strong>{g.away.school}</strong>{g.away.is_owned&&winPct(g,'away')!=null?<span className="win-probability">{(winPct(g,'away')*100).toFixed(1)}%{isFallback(g)?'*':''}</span>:null}</span>
+            <span className="game-team-name-line"><strong><TeamName team={g.away} size="normal"/></strong>{g.away.is_owned&&winPct(g,'away')!=null?<span className="win-probability">{(winPct(g,'away')*100).toFixed(1)}%{isFallback(g)?'*':''}</span>:null}</span>
           </span>
           <b>{g.away_score??'—'}</b>
         </div>
@@ -106,7 +106,7 @@ export default function LiveClient(){
         <div className={`game-team ${teamClass(g.home)}`}>
           <span>
             {g.home.owner_name?<small className="game-owner">{g.home.owner_name}</small>:null}
-            <span className="game-team-name-line"><strong>{g.home.school}</strong>{g.home.is_owned&&winPct(g,'home')!=null?<span className="win-probability">{(winPct(g,'home')*100).toFixed(1)}%{isFallback(g)?'*':''}</span>:null}</span>
+            <span className="game-team-name-line"><strong><TeamName team={g.home} size="normal"/></strong>{g.home.is_owned&&winPct(g,'home')!=null?<span className="win-probability">{(winPct(g,'home')*100).toFixed(1)}%{isFallback(g)?'*':''}</span>:null}</span>
           </span>
           <b>{g.home_score??'—'}</b>
         </div>

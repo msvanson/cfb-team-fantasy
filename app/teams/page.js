@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import {TeamName} from '../team-name';import Link from 'next/link';
 import {Nav} from '../nav';
 import {getTeamDirectory,getLatestTeamProjections} from '../../lib/data';
 
@@ -46,7 +46,7 @@ export default async function Page(){
             <tbody>
               {ts.map(t=>
                 <tr key={t.team_id}>
-                  <td><Link className="teamLink" href={`/teams/${t.team_id}`}><b>{t.school}</b></Link></td>
+                  <td><Link className="teamLink" href={`/teams/${t.team_id}`}><b><TeamName team={t} size="sm"/></b></Link></td>
                   <td>{t.wins}-{t.losses}</td>
                   <td>{t.point_differential>0?'+':''}{t.point_differential}</td>
                   <td>{t.fantasy_points}</td>
