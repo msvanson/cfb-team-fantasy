@@ -164,22 +164,17 @@ export function AdminPanel({teams}){
  </div>}
  {winTotalsInspect&&!winTotalsInspect.ok&&<div className="notice">{winTotalsInspect.error}</div>}
 </div>
-<div className="sectionTitle"><h2>Weekly Odds Test</h2><span className="muted">Request #2 · single event</span></div>
+<div className="sectionTitle"><h2>Weekly Odds Test</h2><span className="muted">Improved matcher · 1 API call</span></div>
 <div className="card">
- <div className="qaTop">
-  <div><b>Test NC State @ Virginia odds</b><div className="muted">Exactly ONE Odds-API request for event 70894634. Requests DraftKings + FanDuel only.</div></div>
-  <button className="button" onClick={testWeeklyOdds}>Run 1-Call Odds Test</button>
- </div>
+ <div className="qaTop"><div><b>Test FBS → Odds-API matching</b><div className="muted">One event-pool request; all team/date matching happens locally. No odds or live calls.</div></div><button className="button" onClick={testWeeklyOdds}>Run Matcher Test</button></div>
  {weeklyOddsTest&&<div className="qaList">
-  <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.ok?'pass':'fail')}>{weeklyOddsTest.ok?'PASS':'FAIL'}</span><div><b>Single-event odds request</b><div className="muted">HTTP {weeklyOddsTest.httpStatus??'—'} · {weeklyOddsTest.externalRequestsUsed??0} API call · Event {weeklyOddsTest.requestedEventId||'—'}</div></div></div>
-  <div className="card">
-   <b>Requested bookmakers</b>
-   <div className="muted">{(weeklyOddsTest.requestedBookmakers||[]).join(' + ')}</div>
-  </div>
-  <div className="card">
-   <b>Raw odds response</b>
-   <pre style={{whiteSpace:'pre-wrap',wordBreak:'break-word',fontSize:11}}>{JSON.stringify(weeklyOddsTest.response??weeklyOddsTest.error??null,null,2)}</pre>
-  </div>
+  <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.ok?'pass':'fail')}>{weeklyOddsTest.ok?'PASS':'FAIL'}</span><div><b>Event pool</b><div className="muted">HTTP {weeklyOddsTest.httpStatus??'—'} · {weeklyOddsTest.eventPoolCount??0} events · {weeklyOddsTest.externalRequestsUsed??0} API call</div></div></div>
+  <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.matched===weeklyOddsTest.gamesChecked?'pass':'warning')}>{weeklyOddsTest.matched===weeklyOddsTest.gamesChecked?'PASS':'CHECK'}</span><div><b>FBS matchup matching</b><div className="muted">{weeklyOddsTest.matched??0} of {weeklyOddsTest.gamesChecked??0} matched · {weeklyOddsTest.missingLocalNames??0} missing local team names</div></div></div>
+  {(weeklyOddsTest.checks||[]).map((x,i)=><div className="card" key={'m'+i}>
+   <b>{x.away||'—'} @ {x.home||'—'}</b><div className="muted">{x.startTime}</div>
+   <div className="muted">Matched: {x.matched?'YES':'NO'}{x.matchScore?` · score ${x.matchScore}`:''}{x.reason?` · ${x.reason}`:''}</div>
+   {x.event&&<div className="muted">Event {x.event.id}: {x.event.away} @ {x.event.home} · {x.event.date}</div>}
+  </div>)}
  </div>}
 </div>
 
