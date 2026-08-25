@@ -70,7 +70,7 @@ export default function LiveClient(){
       <div className="muted">Updates every minute</div>
     </div>
 
-    <div className="sectionTitle"><h2>This Week</h2><span className="muted">Live fantasy standings</span></div>
+    <div className="sectionTitle"><h2>This Week</h2><span className="muted">Final points + unfinished-game projections</span></div>
     <div className="tableWrap">
       <table className="table liveWeeklyTable">
         <thead><tr><th>#</th><th>Owner</th><th>Pts So Far</th><th>Projected</th><th>Max Possible</th></tr></thead>

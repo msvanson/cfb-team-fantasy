@@ -72,20 +72,27 @@ export async function GET(request) {
     }
   }
 
-  // Remaining cached game probabilities form projected/max remaining win points.
+  // Project only UNFINISHED games in the current custom fantasy week.
+  // Completed games are represented only by actual weekly scoring, preventing double counting.
+  // Missing cached odds use the league's neutral 50/50 fallback.
   const projectedRemaining=new Map(), maxRemaining=new Map();
-  for(const o of (weeklyOdds||[])){
-    const h=byId.get(o.home_team_id),a=byId.get(o.away_team_id);
+  for(const g of decorated){
+    if(g.completed) continue;
+
+    const h=g.home,a=g.away,o=g.projection;
+    const hp=o?.home_win_probability!=null?Number(o.home_win_probability):0.5;
+    const ap=o?.away_win_probability!=null?Number(o.away_win_probability):0.5;
+
     if(h?.is_owned&&a?.is_owned&&h.owner_id===a.owner_id){
       projectedRemaining.set(h.owner_id,(projectedRemaining.get(h.owner_id)||0)+1);
       maxRemaining.set(h.owner_id,(maxRemaining.get(h.owner_id)||0)+1);
     }else{
       if(h?.is_owned){
-        projectedRemaining.set(h.owner_id,(projectedRemaining.get(h.owner_id)||0)+Number(o.home_win_probability||0.5));
+        projectedRemaining.set(h.owner_id,(projectedRemaining.get(h.owner_id)||0)+hp);
         maxRemaining.set(h.owner_id,(maxRemaining.get(h.owner_id)||0)+1);
       }
       if(a?.is_owned){
-        projectedRemaining.set(a.owner_id,(projectedRemaining.get(a.owner_id)||0)+Number(o.away_win_probability||0.5));
+        projectedRemaining.set(a.owner_id,(projectedRemaining.get(a.owner_id)||0)+ap);
         maxRemaining.set(a.owner_id,(maxRemaining.get(a.owner_id)||0)+1);
       }
     }

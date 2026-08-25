@@ -1,0 +1,1 @@
+Completed games count only in Pts So Far; unfinished games remain projected; missing odds use 50/50.
