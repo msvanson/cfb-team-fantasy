@@ -179,6 +179,22 @@ export function AdminPanel({teams}){
   </div>}
   {weeklyOddsTest&&!weeklyOddsTest.ok&&<div className="notice">{weeklyOddsTest.error}</div>}
 </div>
+
+{weeklyOddsTest?.model&&<div className="card" style={{marginTop:12,marginBottom:18}}>
+ <div className="qaTop"><div><b>Weekly Odds Diagnostic Results</b><div className="muted">{weeklyOddsTest.model}</div></div></div>
+ <div className="qaList">
+  <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.eventPool?.count>0?'pass':'fail')}>{weeklyOddsTest.eventPool?.count>0?'PASS':'FAIL'}</span><div><b>USA - College event pool</b><div className="muted">{weeklyOddsTest.eventPool?.count??0} upcoming events returned · HTTP {weeklyOddsTest.eventPool?.httpStatus??'—'}</div></div></div>
+  <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.eventsMatched>0?'pass':'warning')}>{weeklyOddsTest.eventsMatched>0?'PASS':'CHECK'}</span><div><b>FBS schedule matches</b><div className="muted">{weeklyOddsTest.eventsMatched??0} of {weeklyOddsTest.upcomingGamesChecked??0} test games matched</div></div></div>
+  <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.oddsResponsesOk>0?'pass':'warning')}>{weeklyOddsTest.oddsResponsesOk>0?'PASS':'CHECK'}</span><div><b>DraftKings/FanDuel odds responses</b><div className="muted">{weeklyOddsTest.oddsResponsesOk??0} matched games returned an odds response</div></div></div>
+  {(weeklyOddsTest.checks||[]).map((x,i)=><div className="card" key={'oddscheck'+i}>
+   <b>{x.away} @ {x.home}</b><div className="muted">{x.startTime}</div>
+   <div className="muted">Event matched: {x.eventMatched?'YES':'NO'} · Odds HTTP: {x.odds?.httpStatus??'—'}</div>
+   {x.event&&<div className="muted wrapText">Matched: {x.event.away} @ {x.event.home} · {x.event.league?.name}</div>}
+   {x.odds&&<pre style={{whiteSpace:'pre-wrap',wordBreak:'break-word',fontSize:11}}>{JSON.stringify(x.odds.raw,null,2)}</pre>}
+  </div>)}
+  <div className="card"><b>Live endpoint</b><div className="muted">{weeklyOddsTest.live?.allAmericanFootballLive??0} American-football games currently live. Zero is normal when no games are underway.</div></div>
+ </div>
+</div>}
 <div className="sectionTitle"><h2>ESPN Futures Inspector</h2><span className="muted">2026 · free ESPN futures feed</span></div>
 <div className="card">
   <div className="qaTop">
@@ -193,53 +209,9 @@ export function AdminPanel({teams}){
   {espnFutures&&!espnFutures.ok&&<div className="notice">{espnFutures.error}</div>}
 </div>
 
-{weeklyOddsTest&&<div className="card" style={{marginTop:12}}>
-  <div className="qaTop">
-    <div>
-      <b>Weekly Odds Raw Diagnostic</b>
-      <div className="muted">Exact discovery/event results from the latest test. Pregame means not started; live means actually in progress.</div>
-    </div>
-  </div>
-  <div style={{display:'grid',gap:10,marginTop:12}}>
-    <div className="card">
-      <b>Selected sport / league</b>
-      <pre style={{whiteSpace:'pre-wrap',wordBreak:'break-word',fontSize:12}}>{JSON.stringify(weeklyOddsTest.selected||weeklyOddsTest.discovery||null,null,2)}</pre>
-    </div>
-    <div className="card">
-      <b>Pending league query</b>
-      <pre style={{whiteSpace:'pre-wrap',wordBreak:'break-word',fontSize:12}}>{JSON.stringify(weeklyOddsTest.pregame?.pendingLeagueQuery||weeklyOddsTest.pregame||null,null,2)}</pre>
-    </div>
-    <div className="card">
-      <b>No-status league query</b>
-      <pre style={{whiteSpace:'pre-wrap',wordBreak:'break-word',fontSize:12}}>{JSON.stringify(weeklyOddsTest.pregame?.noStatusLeagueQuery||null,null,2)}</pre>
-    </div>
-    <div className="card">
-      <b>Pending whole-sport query</b>
-      <pre style={{whiteSpace:'pre-wrap',wordBreak:'break-word',fontSize:12}}>{JSON.stringify(weeklyOddsTest.pregame?.pendingWholeSportQuery||null,null,2)}</pre>
-    </div>
-    <div className="card">
-      <b>Selected pregame event odds</b>
-      <pre style={{whiteSpace:'pre-wrap',wordBreak:'break-word',fontSize:12}}>{JSON.stringify(weeklyOddsTest.pregame?.selectedEventOdds||null,null,2)}</pre>
-    </div>
-    <div className="card">
-      <b>Live query</b>
-      <pre style={{whiteSpace:'pre-wrap',wordBreak:'break-word',fontSize:12}}>{JSON.stringify(weeklyOddsTest.live||null,null,2)}</pre>
-    </div>
-  </div>
-</div>}
 
-{weeklyOddsTest?.model&&<div className="card" style={{marginTop:12}}>
-  <div className="qaTop">
-    <div><b>FBS Matchup Odds Diagnostic</b><div className="muted">{weeklyOddsTest.model}</div></div>
-  </div>
-  <div className="qaList">
-    <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.eventsMatched>0?'pass':'warning')}>{weeklyOddsTest.eventsMatched>0?'PASS':'CHECK'}</span><div><b>CFBD games matched to Odds-API</b><div className="muted">{weeklyOddsTest.eventsMatched||0} of {weeklyOddsTest.upcomingGamesChecked||0} test games matched</div></div></div>
-    <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.oddsResponsesOk>0?'pass':'warning')}>{weeklyOddsTest.oddsResponsesOk>0?'PASS':'CHECK'}</span><div><b>Odds responses</b><div className="muted">{weeklyOddsTest.oddsResponsesOk||0} matched games returned an odds response</div></div></div>
-    {(weeklyOddsTest.checks||[]).map((x,i)=><div className="card" key={'fbs'+i}>
-      <b>{x.away} @ {x.home}</b>
-      <div className="muted">{x.startTime}</div>
-      <div className="muted">Event matched: {x.eventMatched?'YES':'NO'} · Odds HTTP: {x.odds?.httpStatus??'—'}</div>
-      {x.event&&<div className="muted wrapText">Matched event: {JSON.stringify(x.event)}</div>}
+
+
       {x.odds&&<div className="muted wrapText">Odds response: {JSON.stringify(x.odds.raw)}</div>}
     </div>)}
     <div className="card"><b>Live endpoint</b><div className="muted">{weeklyOddsTest.live?.allAmericanFootballLive??0} American-football games live right now. Zero is normal if none are currently being played.</div></div>
