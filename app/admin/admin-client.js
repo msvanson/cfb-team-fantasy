@@ -164,13 +164,14 @@ export function AdminPanel({teams}){
  </div>}
  {winTotalsInspect&&!winTotalsInspect.ok&&<div className="notice">{winTotalsInspect.error}</div>}
 </div>
-<div className="sectionTitle"><h2>Weekly Odds Test</h2><span className="muted">Strict matcher · 1 API call</span></div>
+<div className="sectionTitle"><h2>Weekly Odds Test</h2><span className="muted">Projection preview</span></div>
 <div className="card">
- <div className="qaTop"><div><b>Test strict FBS/FCS event matching</b><div className="muted">One event-pool request. One-sided matches require the exact FBS school identity + kickoff time; ambiguous matches are rejected.</div></div><button className="button" onClick={testWeeklyOdds}>Run Strict Matcher</button></div>
+ <div className="qaTop"><div><b>Build weekly projected win points</b><div className="muted">Uses the proven strict matcher, requests odds only for games involving rostered teams, removes vig, averages DraftKings/FanDuel, and does not save anything yet.</div></div><button className="button" onClick={testWeeklyOdds}>Preview Weekly Projections</button></div>
  {weeklyOddsTest&&<div className="qaList">
-  <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.ok?'pass':'fail')}>{weeklyOddsTest.ok?'PASS':'FAIL'}</span><div><b>Event pool</b><div className="muted">HTTP {weeklyOddsTest.httpStatus??'—'} · {weeklyOddsTest.eventPoolCount??0} events · {weeklyOddsTest.externalRequestsUsed??0} API call</div></div></div>
-  <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.matched===weeklyOddsTest.gamesChecked?'pass':'warning')}>{weeklyOddsTest.matched===weeklyOddsTest.gamesChecked?'PASS':'CHECK'}</span><div><b>Strict game matching</b><div className="muted">{weeklyOddsTest.matched??0} of {weeklyOddsTest.gamesChecked??0} matched · {weeklyOddsTest.twoSidedMatched??0} FBS/FBS · {weeklyOddsTest.oneSidedMatched??0} FBS/FCS</div></div></div>
-  {(weeklyOddsTest.checks||[]).map((x,i)=><div className="card" key={'sm'+i}><b>{x.away||'FCS opponent'} @ {x.home||'FCS opponent'}</b><div className="muted">{x.startTime}</div><div className="muted">Matched: {x.matched?'YES':'NO'}{x.matchMode?` · ${x.matchMode}`:''}{x.matchScore?` · score ${x.matchScore}`:''}</div>{x.event&&<div className="muted">Event {x.event.id}: {x.event.away} @ {x.event.home} · {x.event.date}</div>}</div>)}
+  <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.ok?'pass':'fail')}>{weeklyOddsTest.ok?'PASS':'FAIL'}</span><div><b>Projection run</b><div className="muted">{weeklyOddsTest.relevantGames??0} relevant games · {weeklyOddsTest.externalRequestsUsed??0} Odds-API calls · {weeklyOddsTest.windowDays??0}-day window</div></div></div>
+  {weeklyOddsTest.ownerProjectedWinPoints&&<div className="card"><b>Projected win points by owner</b>{Object.entries(weeklyOddsTest.ownerProjectedWinPoints).sort((a,b)=>b[1]-a[1]).map(([n,p])=><div className="qaRow" key={n}><span><b>{n}</b></span><span>{Number(p).toFixed(3)}</span></div>)}</div>}
+  {(weeklyOddsTest.games||[]).map((x,i)=><div className="card" key={'wp'+i}><b>{x.game}</b><div className="muted">{x.mode} · Event {x.eventId||'—'}{x.books?` · ${x.books} book(s)`:''}</div>{x.homeProbability!=null&&<div className="muted">Home {(x.homeProbability*100).toFixed(1)}% · Away {(x.awayProbability*100).toFixed(1)}%</div>}{x.projected&&<div className="muted">{Object.entries(x.projected).map(([n,p])=>`${n}: +${Number(p).toFixed(3)}`).join(' · ')}</div>}</div>)}
+  {weeklyOddsTest.error&&<div className="notice">{weeklyOddsTest.error}</div>}
  </div>}
 </div>
 
