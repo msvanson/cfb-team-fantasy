@@ -28,7 +28,7 @@ export async function GET(request) {
   const from = new Date(now.getTime() - 18 * 60 * 60 * 1000).toISOString();
   const to = new Date(now.getTime() + 30 * 60 * 60 * 1000).toISOString();
 
-  const [{ data: games, error: gameError }, { data: directory, error: dirError }, { count: totalGames, error: countError }] = await Promise.all([
+  const [{ data: games, error: gameError }, { data: directory, error: dirError }, { count: totalGames, error: countError }, { data: weeklyOdds, error: oddsError }] = await Promise.all([
     supabase
       .from('games')
       .select('id,cfbd_game_id,week,start_time,home_team_id,away_team_id,home_score,away_score,status,period,clock,completed')
@@ -44,30 +44,48 @@ export async function GET(request) {
       .from('games')
       .select('id', { count: 'exact', head: true })
       .eq('season_id', 1),
+    supabase
+      .from('weekly_game_odds')
+      .select('cfbd_game_id,home_team_id,away_team_id,home_win_probability,away_win_probability,projection_source,books_used,odds_updated_at,fetched_at')
+      .eq('season_id', 1),
   ]);
 
-  if (gameError || dirError || countError) {
+  if (gameError || dirError || countError || oddsError) {
     return NextResponse.json({
       ok: false,
-      error: gameError?.message || dirError?.message || countError?.message,
+      error: gameError?.message || dirError?.message || countError?.message || oddsError?.message,
       sync,
     }, { status: 500 });
   }
 
   const byId = new Map((directory || []).map(t => [t.team_id, t]));
+  const oddsByGame = new Map((weeklyOdds || []).map(o => [String(o.cfbd_game_id), o]));
   const decorated = (games || [])
     .map(g => ({
       ...g,
       home: byId.get(g.home_team_id) || { school: 'Opponent', owner_name: null, is_owned: false },
       away: byId.get(g.away_team_id) || { school: 'Opponent', owner_name: null, is_owned: false },
+      projection: oddsByGame.get(String(g.cfbd_game_id)) || null,
     }))
     .filter(g => g.home.is_owned || g.away.is_owned);
+
+  const ownerProjected = {};
+  for (const o of (weeklyOdds || [])) {
+    const h = byId.get(o.home_team_id), a = byId.get(o.away_team_id);
+    if (h?.is_owned && a?.is_owned && h.owner_name && h.owner_name === a.owner_name) {
+      ownerProjected[h.owner_name] = (ownerProjected[h.owner_name] || 0) + 1;
+    } else {
+      if (h?.is_owned && h.owner_name) ownerProjected[h.owner_name] = (ownerProjected[h.owner_name] || 0) + Number(o.home_win_probability || 0);
+      if (a?.is_owned && a.owner_name) ownerProjected[a.owner_name] = (ownerProjected[a.owner_name] || 0) + Number(o.away_win_probability || 0);
+    }
+  }
 
   return NextResponse.json({
     ok: Boolean(sync?.ok),
     updatedAt: new Date().toISOString(),
     totalGames: totalGames || 0,
     sync,
+    ownerProjected,
     games: decorated,
   });
 }

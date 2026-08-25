@@ -27,7 +27,7 @@ function winnerClass(g, side) {
 }
 
 export default function LiveClient() {
-  const [data, setData] = useState({ games: [], sync: null, totalGames: 0, updatedAt: null });
+  const [data, setData] = useState({ games: [], sync: null, totalGames: 0, updatedAt: null, ownerProjected: {} });
   const [loading, setLoading] = useState(true);
   const [requestError, setRequestError] = useState(null);
 
@@ -75,6 +75,13 @@ export default function LiveClient() {
     <div className="liveMeta">
       <span>Auto-refreshes every minute while open</span>
       <span>Last checked: {data.updatedAt ? new Date(data.updatedAt).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}) : '—'}</span>
+    </div>
+
+    <div className="sectionTitle"><h2>This Week — Projected Win Points</h2><span className="muted">Cached weekly projections</span></div>
+    <div className="card">
+      {Object.entries(data.ownerProjected || {}).sort((a,b)=>b[1]-a[1]).map(([owner,pts],i)=>
+        <div className="qaRow" key={owner}><span><b>{i+1}. {owner}</b></span><span><b>{Number(pts).toFixed(3)}</b></span></div>
+      )}
     </div>
 
     {requestError && <div className="notice">Live feed issue: {requestError}</div>}
