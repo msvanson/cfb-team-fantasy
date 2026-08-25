@@ -1,0 +1,6 @@
+Live weekly point differential v1
+- Adds a Pt Diff column to the Live weekly standings.
+- Uses the current custom fantasy-week window.
+- Includes completed and in-progress scores.
+- Upcoming games contribute 0 until they start.
+- Same-owner matchups naturally cancel between that owner's two teams.

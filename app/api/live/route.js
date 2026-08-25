@@ -98,11 +98,26 @@ export async function GET(request) {
     }
   }
 
+  // Weekly point differential is live: sum each owned team's score minus its opponent's
+  // score for every started game in the current custom fantasy week. Upcoming games add 0.
+  const weeklyPointDiff=new Map();
+  for(const g of decorated){
+    const started=g.completed||g.status==='in_progress'||g.home_score!=null||g.away_score!=null;
+    if(!started)continue;
+    const hs=Number(g.home_score??0),as=Number(g.away_score??0);
+    if(g.home?.is_owned&&g.home.owner_id!=null){
+      weeklyPointDiff.set(g.home.owner_id,(weeklyPointDiff.get(g.home.owner_id)||0)+(hs-as));
+    }
+    if(g.away?.is_owned&&g.away.owner_id!=null){
+      weeklyPointDiff.set(g.away.owner_id,(weeklyPointDiff.get(g.away.owner_id)||0)+(as-hs));
+    }
+  }
+
   const weeklyStandings=(owners||[]).map(o=>{
     const actual=actualByOwner.get(o.id)||0;
     const projected=actual+(projectedRemaining.get(o.id)||0);
     const max=actual+(maxRemaining.get(o.id)||0);
-    return {owner_id:o.id,owner_name:o.name,draft_slot:o.draft_slot,points_so_far:actual,projected_points:projected,max_possible:max};
+    return {owner_id:o.id,owner_name:o.name,draft_slot:o.draft_slot,points_so_far:actual,weekly_point_diff:weeklyPointDiff.get(o.id)||0,projected_points:projected,max_possible:max};
   }).sort((a,b)=>b.projected_points-a.projected_points||b.points_so_far-a.points_so_far||a.draft_slot-b.draft_slot);
 
   return NextResponse.json({

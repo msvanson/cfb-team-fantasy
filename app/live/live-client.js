@@ -73,9 +73,9 @@ export default function LiveClient(){
     <div className="sectionTitle"><h2>This Week</h2><span className="muted">Final points + unfinished-game projections</span></div>
     <div className="tableWrap">
       <table className="table liveWeeklyTable">
-        <thead><tr><th>#</th><th>Owner</th><th>Pts So Far</th><th>Projected</th><th>Max Possible</th></tr></thead>
+        <thead><tr><th>#</th><th>Owner</th><th>Pts So Far</th><th>Pt Diff</th><th>Projected</th><th>Max Possible</th></tr></thead>
         <tbody>{(data.weeklyStandings||[]).map((r,i)=><tr key={r.owner_id}>
-          <td>{i+1}</td><td><b>{r.owner_name}</b></td><td>{Number(r.points_so_far).toFixed(1)}</td><td><b>{Number(r.projected_points).toFixed(2)}</b></td><td>{Number(r.max_possible).toFixed(1)}</td>
+          <td>{i+1}</td><td><b>{r.owner_name}</b></td><td>{Number(r.points_so_far).toFixed(1)}</td><td>{Number(r.weekly_point_diff)>0?'+':''}{Number(r.weekly_point_diff||0)}</td><td><b>{Number(r.projected_points).toFixed(2)}</b></td><td>{Number(r.max_possible).toFixed(1)}</td>
         </tr>)}</tbody>
       </table>
     </div>
