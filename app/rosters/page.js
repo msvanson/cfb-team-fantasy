@@ -1,5 +1,6 @@
 import {TeamName} from '../team-name';import Link from 'next/link';
 import {Nav} from '../nav';
+import RosterGameStatus from './roster-game-status';
 import {getTeamDirectory,getStandings,getLatestTeamProjections,getOwnerProjectionTotals} from '../../lib/data';
 export const dynamic='force-dynamic';
 
@@ -52,6 +53,7 @@ export default async function Page(){
                 <span>
                   <Link className="teamLink" href={`/teams/${t.team_id}`}><b><TeamName team={t} size="sm"/></b></Link>
                   <small>{t.conference_code}</small>
+                  <RosterGameStatus teamId={t.team_id}/>
                 </span>
                 <span className="rosterProjectionStats">
                   <span><small>Fantasy</small><b>{t.fantasy_points}</b></span>

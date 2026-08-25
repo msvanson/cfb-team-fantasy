@@ -97,3 +97,8 @@
 .ownershipCompare{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:8px;margin:14px 0}
 
 .waiverExecuteBox{display:flex;align-items:center;gap:12px;margin-top:16px;padding-top:14px;border-top:1px solid rgba(255,255,255,.1)}.waiverExecuteBox small{opacity:.7}
+
+.rosterGameLine{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:5px;font-size:11px;line-height:1.25}
+.rosterGameLine .teamNameWithLogo{gap:4px}.rosterGameLine .schoolLogo{width:15px;height:15px}
+.rosterGameState{opacity:.78}.rosterGamePct{font-weight:800}.rosterGameLine.isLive,.rosterGameLine.isLive .rosterGameState{font-weight:800;opacity:1}
+@media(max-width:640px){.rosterGameLine{display:grid;grid-template-columns:1fr auto}.rosterGameState{grid-column:1}.rosterGamePct{grid-column:2;grid-row:1}}
