@@ -4,10 +4,14 @@ import {authenticatedProfileFromRequest} from '../../../lib/user-auth';
 const sb=()=>createClient(process.env.NEXT_PUBLIC_SUPABASE_URL,process.env.SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false}});
 
 function eligibleDrops(roster,target){
- const same=roster.filter(t=>t.conference_code===target.conference_code);
- const flex=roster.filter(t=>t.roster_slot==='FLEX');
- const ids=new Set([...same,...flex].map(t=>t.team_id));
- return roster.filter(t=>ids.has(t.team_id));
+ // A legal drop can be:
+ // 1) a roster team from the conference being added, OR
+ // 2) either team from the roster's currently doubled conference.
+ // The latter works because dropping either doubled-conference team frees the Flex.
+ const counts=new Map();
+ for(const t of roster)counts.set(t.conference_code,(counts.get(t.conference_code)||0)+1);
+ const doubled=new Set([...counts.entries()].filter(([,n])=>n>1).map(([c])=>c));
+ return roster.filter(t=>t.conference_code===target.conference_code||doubled.has(t.conference_code));
 }
 function period(){
  const now=new Date(), year=now.getUTCFullYear();
@@ -19,12 +23,14 @@ function period(){
 export async function GET(req){
  const auth=await authenticatedProfileFromRequest(req);if(!auth.ok)return NextResponse.json({ok:false,error:auth.error},{status:auth.status});
  const s=sb(),ownerId=auth.profile.owner_id;if(!ownerId)return NextResponse.json({ok:false,error:'Account is not assigned to a roster'},{status:403});
- const [{data:teams},{data:claims}]=await Promise.all([
+ const [{data:teams},{data:claims},{data:projections}]=await Promise.all([
    s.from('team_directory').select('*').eq('season_id',1),
-   s.from('waiver_claims').select('*').eq('season_id',1).eq('owner_id',ownerId).eq('status','pending').order('priority')
+   s.from('waiver_claims').select('*').eq('season_id',1).eq('owner_id',ownerId).eq('status','pending').order('priority'),
+   s.from('latest_team_projections').select('team_id,projected_points').eq('season_id',1)
  ]);
+ const projectionMap=new Map((projections||[]).map(x=>[Number(x.team_id),Number(x.projected_points)]));
  const roster=(teams||[]).filter(t=>t.owner_id===ownerId);
- const available=(teams||[]).filter(t=>!t.is_owned&&Number(t.wins||0)<=4).map(t=>({...t,eligible_drops:eligibleDrops(roster,t).map(x=>({team_id:x.team_id,school:x.school,conference_code:x.conference_code,roster_slot:x.roster_slot}))}));
+ const available=(teams||[]).filter(t=>!t.is_owned&&Number(t.wins||0)<=4).map(t=>({...t,season_projected_points:projectionMap.has(Number(t.team_id))?projectionMap.get(Number(t.team_id)):null,eligible_drops:eligibleDrops(roster,t).map(x=>({team_id:x.team_id,school:x.school,conference_code:x.conference_code,roster_slot:x.roster_slot}))}));
  return NextResponse.json({ok:true,profile:auth.profile,period:period(),available,roster,claims:claims||[]});
 }
 export async function POST(req){
