@@ -28,6 +28,10 @@ export function Login(){
 }
 
 export function AdminPanel({teams}){
+  const [ownershipCheck,setOwnershipCheck]=useState(null);
+  const [ownershipMsg,setOwnershipMsg]=useState('');
+  async function checkOwnershipScoring(){setOwnershipMsg('Checking ownership ledger…');const r=await fetch('/api/admin/ownership-scoring',{cache:'no-store'});const j=await r.json();setOwnershipCheck(j);setOwnershipMsg(r.ok?'Ownership-aware scoring ledger loaded.':j.error||'Check failed');}
+
   const [waiverPreview,setWaiverPreview]=useState(null);
   const [waiverPreviewMsg,setWaiverPreviewMsg]=useState('');
   async function previewWaivers(){setWaiverPreviewMsg('Building dry-run…');const r=await fetch('/api/admin/waiver-preview',{cache:'no-store'});const j=await r.json();setWaiverPreview(j);setWaiverPreviewMsg(r.ok?'Preview complete — no rosters were changed.':j.error||'Preview failed');}
@@ -97,6 +101,14 @@ export function AdminPanel({teams}){
   }
 
   return <div>
+    <div className="sectionTitle"><h2>Ownership-Aware Scoring</h2><span className="muted">Safety diagnostic</span></div>
+    <div className="card">
+      <div className="qaTop"><div><b>Verify scoring ownership boundaries</b><div className="muted">Games are credited to whoever owned the school at kickoff. This does not change current standings yet.</div></div><button className="button" onClick={checkOwnershipScoring}>Check Ownership Scoring</button></div>
+      {ownershipMsg&&<div className="notice">{ownershipMsg}</div>}
+      {ownershipCheck?.owner_totals?.length>0&&<div className="ownershipTotals">{ownershipCheck.owner_totals.map(x=><div className="ownershipTotal" key={x.owner_id}><b>{x.owner}</b><span>{x.win_points} win pts · {x.point_differential>=0?'+':''}{x.point_differential} diff · {x.games_completed} final games</span></div>)}</div>}
+      {ownershipCheck?.ownership_periods?.length>0&&<details className="waiverClaimAudit"><summary>Ownership periods ({ownershipCheck.ownership_periods.length})</summary>{ownershipCheck.ownership_periods.map(x=><div className="waiverPreviewStep" key={x.id}><b>{x.owner} · {x.team}</b><span>{new Date(x.acquired_at).toLocaleString()} → {x.released_at?new Date(x.released_at).toLocaleString():'current'}</span><small>{x.acquisition_type}</small></div>)}</details>}
+    </div>
+
     <div className="sectionTitle"><h2>Waiver Run Preview</h2><span className="muted">Dry-run only — cannot change rosters</span></div>
     <div className="card">
       <div className="qaTop"><div><b>Preview round-based waivers</b><div className="muted">Cycles last place → first place, then returns to the top until no valid claims remain.</div></div><button className="button" onClick={previewWaivers}>Preview Waiver Run</button></div>

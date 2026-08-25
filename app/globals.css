@@ -91,3 +91,5 @@
 .waiverPreviewOrder{margin:14px 0;padding:10px 0}.waiverPreviewStep{display:grid;gap:3px;padding:10px 0;border-top:1px solid rgba(255,255,255,.09)}.waiverPreviewStep small{opacity:.7}.waiverPreviewStep.would_succeed span{font-weight:700}
 
 .waiverRound{margin-top:16px}.waiverRound h3{margin:0 0 5px}.waiverClaimAudit{margin:16px 0}.waiverClaimAudit summary{cursor:pointer;font-weight:700;padding:8px 0}
+
+.ownershipTotals{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:14px}.ownershipTotal{display:grid;gap:3px;padding:10px;border:1px solid rgba(255,255,255,.09);border-radius:8px}.ownershipTotal span{font-size:12px;opacity:.75}
