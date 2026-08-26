@@ -1,15 +1,16 @@
 import {TeamName} from '../team-name';import Link from 'next/link';
 import {Nav} from '../nav';
 import RosterGameStatus from './roster-game-status';
-import {getTeamDirectory,getStandings,getLatestTeamProjections,getOwnerProjectionTotals} from '../../lib/data';
+import {getTeamDirectory,getStandings,getLatestTeamProjections,getOwnerProjectionTotals,getPreviousTeams} from '../../lib/data';
 export const dynamic='force-dynamic';
 
 export default async function Page(){
-  const [all,standings,projections,ownerProj]=await Promise.all([
+  const [all,standings,projections,ownerProj,previousTeams]=await Promise.all([
     getTeamDirectory(),
     getStandings(),
     getLatestTeamProjections(),
-    getOwnerProjectionTotals()
+    getOwnerProjectionTotals(),
+    getPreviousTeams()
   ]);
 
   const data=all.filter(x=>x.is_owned);
@@ -63,6 +64,16 @@ export default async function Page(){
               </div>
             )}
           </div>
+          {previousTeams.filter(x=>x.owner_name===owner).length>0&&<details className="previousTeams">
+            <summary>Previous Teams ({previousTeams.filter(x=>x.owner_name===owner).length})</summary>
+            <div className="previousTeamRows">
+              {previousTeams.filter(x=>x.owner_name===owner).map(x=><div className="previousTeamRow" key={x.ownership_id}>
+                <span><Link className="teamLink" href={`/teams/${x.team_id}`}><b><TeamName team={x} size="sm"/></b></Link><small>{x.conference_code||''}</small></span>
+                <span className="previousTeamFrozen"><span><small>Fantasy earned</small><b>{x.fantasy_points_earned}</b></span><span><small>Wins owned</small><b>{x.wins_while_owned}</b></span><span><small>Pt diff owned</small><b>{Number(x.point_differential_while_owned)>0?'+':''}{x.point_differential_while_owned}</b></span></span>
+                <small className="muted">Owned {new Date(x.acquired_at).toLocaleDateString()} – {new Date(x.released_at).toLocaleDateString()}</small>
+              </div>)}
+            </div>
+          </details>}
         </div>
       })}
     </section>
