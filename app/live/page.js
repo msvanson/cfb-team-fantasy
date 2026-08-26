@@ -1,13 +1,2 @@
-import {Nav} from '../nav';import LiveClient from './live-client';export const dynamic='force-dynamic';
-export default function LivePage(){
-  return <main className="shell">
-    <div className="topbar">
-      <div>
-        <div className="brand">Live Scores</div>
-        <div className="sub">Every current game involving a drafted team</div>
-      </div>
-    </div>
-    <Nav/>
-    <section className="section"><LiveClient/></section>
-  </main>
-}
+import {Nav} from '../nav';import {LeagueHeader} from '../league-header';import LiveClient from './live-client';export const dynamic='force-dynamic';
+export default function LivePage(){return <main className="shell"><LeagueHeader/><Nav/><section className="section livePageSection"><LiveClient/></section></main>}

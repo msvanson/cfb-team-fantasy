@@ -49,7 +49,7 @@ export async function GET(request) {
     {count:totalGames,error:countError}
   ] = await Promise.all([
     supabase.from('games')
-      .select('id,cfbd_game_id,week,season_type,start_time,home_team_id,away_team_id,home_score,away_score,status,period,clock,completed,is_conference_championship,is_bowl,is_cfp,playoff_round')
+      .select('id,cfbd_game_id,week,season_type,start_time,home_team_id,away_team_id,home_score,away_score,status,period,clock,completed,is_conference_championship,is_bowl,is_cfp,playoff_round,notes')
       .eq('season_id',1).gte('start_time',from).lte('start_time',to).order('start_time'),
     supabase.from('team_directory')
       .select('team_id,school,abbreviation,mascot,owner_id,owner_name,is_owned')
@@ -74,7 +74,8 @@ export async function GET(request) {
     ...g,
     home:byId.get(g.home_team_id)||{school:'Opponent',abbreviation:'OPP',owner_id:null,owner_name:null,is_owned:false},
     away:byId.get(g.away_team_id)||{school:'Opponent',abbreviation:'OPP',owner_id:null,owner_name:null,is_owned:false},
-    projection:oddsByGame.get(String(g.cfbd_game_id))||null
+    projection:oddsByGame.get(String(g.cfbd_game_id))||null,
+    network:null
   })).filter(g=>g.home.is_owned||g.away.is_owned);
 
   const currentWeek = fantasyWeek.label;

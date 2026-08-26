@@ -1,119 +1,28 @@
 'use client';
-import {useEffect,useState} from 'react';
-import {TeamName} from '../team-name';
-
-function gameState(g){
-  if(g.completed)return 'FINAL';
-  if(g.status==='in_progress'){
-    if(Number(g.period)>4)return `OT${Number(g.period)>5?` ${Number(g.period)-4}`:''}`;
-    const q=g.period?`${g.period}${g.period===1?'st':g.period===2?'nd':g.period===3?'rd':'th'} Quarter`:'LIVE';
-    return g.clock?`${q} · ${g.clock}`:q;
-  }
-  if(!g.start_time)return 'Scheduled';
-  return new Date(g.start_time).toLocaleString([],{weekday:'short',hour:'numeric',minute:'2-digit'});
-}
-function sortRank(g){
-  if(g.status==='in_progress'&&Number(g.period)>4)return 0;
-  if(g.status==='in_progress')return 5-Math.min(Number(g.period||1),4); // 4Q=1,3Q=2,2Q=3,1Q=4
-  if(g.completed)return 5;
-  return 6;
-}
-function gameSort(a,b){
-  const ra=sortRank(a),rb=sortRank(b);
-  if(ra!==rb)return ra-rb;
-  if(ra>=1&&ra<=4){
-    const ca=parseClock(a.clock),cb=parseClock(b.clock);
-    return ca-cb; // less time remaining first within a quarter
-  }
-  return new Date(a.start_time||0)-new Date(b.start_time||0);
-}
+import {useEffect,useMemo,useState} from 'react';import {createClient} from '@supabase/supabase-js';import {TeamName} from '../team-name';
+function gameState(g){if(g.completed)return 'FINAL';if(g.status==='in_progress'){if(Number(g.period)>4)return `OT${Number(g.period)>5?` ${Number(g.period)-4}`:''}${g.clock?` · ${g.clock}`:''}`;const q=g.period?`${g.period}Q`:'LIVE';return g.clock?`${q} · ${g.clock}`:q}if(!g.start_time)return 'Scheduled';return new Date(g.start_time).toLocaleString([],{weekday:'short',hour:'numeric',minute:'2-digit'})}
 function parseClock(c){const m=String(c||'').match(/(\d+):(\d+)/);return m?Number(m[1])*60+Number(m[2]):9999}
-function matchupClass(g){
-  if(g.home.is_owned&&g.away.is_owned){
-    return g.home.owner_id===g.away.owner_id?'matchup-same-owner':'matchup-rival-owners';
-  }
-  return '';
-}
-function teamClass(t){return t?.is_owned?'owned-team-row':''}
-function winPct(g,side){
-  if(!g?.projection)return null;
-  const v=side==='home'?g.projection.home_win_probability:g.projection.away_win_probability;
-  return v==null?null:Number(v);
-}
+function sortRank(g){if(g.status==='in_progress'&&Number(g.period)>4)return 0;if(g.status==='in_progress')return 5-Math.min(Number(g.period||1),4);if(g.completed)return 5;return 6}
+function gameSort(a,b){const ra=sortRank(a),rb=sortRank(b);if(ra!==rb)return ra-rb;if(ra>=1&&ra<=4)return parseClock(a.clock)-parseClock(b.clock);return new Date(a.start_time||0)-new Date(b.start_time||0)}
+function matchupClass(g){if(g.home.is_owned&&g.away.is_owned)return g.home.owner_id===g.away.owner_id?'matchup-same-owner':'matchup-rival-owners';return ''}
+function winPct(g,side){const v=side==='home'?g?.projection?.home_win_probability:g?.projection?.away_win_probability;return v==null?null:Number(v)}
 function isFallback(g){return g?.projection?.projection_source==='fallback_50_50'}
-
+function TeamRow({team,score,g,side}){const pct=team.is_owned?winPct(g,side):null;return <div className={`compactGameTeam ${team.is_owned?'owned-team-row':''}`}><span className="compactTeamIdentity"><strong><TeamName team={team} size="normal"/></strong>{team.owner_name?<small className="compactOwner">{team.owner_name}</small>:null}</span><span className="compactTeamRight">{pct!=null?<small className="win-probability">{(pct*100).toFixed(0)}%{isFallback(g)?'*':''}</small>:null}<b>{score??'—'}</b></span></div>}
 export default function LiveClient(){
-  const [data,setData]=useState({games:[],weeklyStandings:[],sync:null,totalGames:0,updatedAt:null});
-  const [loading,setLoading]=useState(true);
-  const [requestError,setRequestError]=useState(null);
-
-  async function refresh(force=false){
-    try{
-      setRequestError(null);
-      const res=await fetch(`/api/live${force?'?force=1':''}`,{cache:'no-store'});
-      const json=await res.json();setData(json);
-      if(!res.ok)setRequestError(json.error||`Request failed (${res.status})`);
-    }catch(e){setRequestError(e?.message||String(e))}
-    finally{setLoading(false)}
-  }
-  useEffect(()=>{refresh(true);const id=setInterval(()=>refresh(false),60000);return()=>clearInterval(id)},[]);
-
-  const games=[...(data.games||[])].sort(gameSort);
-  const liveCount=games.filter(g=>!g.completed&&g.status==='in_progress').length;
-
-  return <div>
-    <div className="liveWeekHeading">
-      <h1>{data.weekKey||'Current Week'}</h1>
-      <div className="muted">{data.weekDates||''}</div>
-    </div>
-    <div className="liveHero card">
-      <div><div className="muted">Games Currently Live</div><div className="liveHeroNumber">{liveCount}</div></div>
-      <div className="muted">Updates every minute</div>
-    </div>
-
-    <div className="sectionTitle"><h2>This Week</h2><span className="muted">Final points + unfinished-game projections</span></div>
-    <div className="tableWrap">
-      <table className="table liveWeeklyTable">
-        <thead><tr><th>#</th><th>Owner</th><th>Pts So Far</th><th>Pt Diff</th><th>Projected</th><th>Max Possible</th></tr></thead>
-        <tbody>{(data.weeklyStandings||[]).map((r,i)=><tr key={r.owner_id}>
-          <td>{i+1}</td><td><b>{r.owner_name}</b></td><td>{Number(r.points_so_far).toFixed(1)}</td><td>{Number(r.weekly_point_diff)>0?'+':''}{Number(r.weekly_point_diff||0)}</td><td><b>{Number(r.projected_points).toFixed(2)}</b></td><td>{Number(r.max_possible).toFixed(1)}</td>
-        </tr>)}</tbody>
-      </table>
-    </div>
-    <div className="muted weeklyTieNote">Weekly tiebreakers: fantasy points → point differential → higher draft order.</div>
-
-    <div className="liveMeta">
-      <span>{liveCount} live · {games.filter(g=>g.completed).length} final · {games.filter(g=>!g.completed&&g.status!=='in_progress').length} upcoming</span>
-      <span>Last checked: {data.updatedAt?new Date(data.updatedAt).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'—'}</span>
-    </div>
-
-    {requestError&&<div className="notice">Live feed issue: {requestError}</div>}
-    {data.sync?.error&&<div className="notice">Sync issue: {data.sync.error}</div>}
-    {data.sync?.reason==='throttled'&&<div className="muted liveThrottle">A recent sync is being reused to conserve API calls.</div>}
-
-    <div className="sectionTitle"><h2>Games</h2><span className="muted">OT → 4Q → 3Q → 2Q → 1Q → Final → Upcoming</span></div>
-    {games.length===0&&!loading?<div className="card liveEmpty">No rostered-team games in the current window.</div>:null}
-    <div className="game-list">
-      {games.map(g=><div className={`card game-card ${matchupClass(g)}`} key={g.cfbd_game_id}>
-        <div className="game-status">{gameState(g)}</div>
-
-        <div className={`game-team ${teamClass(g.away)}`}>
-          <span>
-            {g.away.owner_name?<small className="game-owner">{g.away.owner_name}</small>:null}
-            <span className="game-team-name-line"><strong><TeamName team={g.away} size="normal"/></strong>{g.away.is_owned&&winPct(g,'away')!=null?<span className="win-probability">{(winPct(g,'away')*100).toFixed(1)}%{isFallback(g)?'*':''}</span>:null}</span>
-          </span>
-          <b>{g.away_score??'—'}</b>
-        </div>
-
-        <div className={`game-team ${teamClass(g.home)}`}>
-          <span>
-            {g.home.owner_name?<small className="game-owner">{g.home.owner_name}</small>:null}
-            <span className="game-team-name-line"><strong><TeamName team={g.home} size="normal"/></strong>{g.home.is_owned&&winPct(g,'home')!=null?<span className="win-probability">{(winPct(g,'home')*100).toFixed(1)}%{isFallback(g)?'*':''}</span>:null}</span>
-          </span>
-          <b>{g.home_score??'—'}</b>
-        </div>
-        {isFallback(g)?<div className="fallback-odds-note">* No sportsbook moneyline available — using 50/50 projection.</div>:null}
-      </div>)}
-    </div>
-  </div>
+ const [data,setData]=useState({games:[],weeklyStandings:[],updatedAt:null});const [loading,setLoading]=useState(true),[requestError,setRequestError]=useState(null),[filter,setFilter]=useState('all'),[ownerId,setOwnerId]=useState(null);
+ const supabase=useMemo(()=>createClient(process.env.NEXT_PUBLIC_SUPABASE_URL,process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY),[]);
+ async function refresh(force=false){try{setRequestError(null);const res=await fetch(`/api/live${force?'?force=1':''}`,{cache:'no-store'}),json=await res.json();setData(json);if(!res.ok)setRequestError(json.error||`Request failed (${res.status})`)}catch(e){setRequestError(e?.message||String(e))}finally{setLoading(false)}}
+ useEffect(()=>{refresh(true);const id=setInterval(()=>refresh(false),60000);return()=>clearInterval(id)},[]);
+ useEffect(()=>{(async()=>{try{const {data:{session}}=await supabase.auth.getSession();if(!session)return;const r=await fetch('/api/my-owner',{headers:{Authorization:`Bearer ${session.access_token}`}}),j=await r.json();setOwnerId(j.owner_id?Number(j.owner_id):null)}catch{}})()},[supabase]);
+ const games=[...(data.games||[])].sort(gameSort),liveCount=games.filter(g=>!g.completed&&g.status==='in_progress').length;
+ const filtered=games.filter(g=>filter==='live'?g.status==='in_progress'&&!g.completed:filter==='mine'?(ownerId!=null&&(Number(g.home.owner_id)===ownerId||Number(g.away.owner_id)===ownerId)):true);
+ return <div>
+  <div className="liveTopLine"><div className="liveWeekCompact"><b>{data.weekKey||'Current Week'}</b><span>{data.weekDates||''}</span>{liveCount>0?<span className="liveCountBadge"><i/> {liveCount} LIVE</span>:null}</div><small className="lastChecked">Updated {data.updatedAt?new Date(data.updatedAt).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'—'}</small></div>
+  <div className="liveDesktopLayout"><aside className="liveRankingsPane"><div className="sectionTitle"><h2>Live {data.weekKey||'Week'} Rankings</h2></div><div className="liveRankTableWrap"><table className="table liveRankTable"><thead><tr><th>Rank</th><th>Owner</th><th>Pts</th><th>Proj</th><th>Max</th><th>Pt Diff</th></tr></thead><tbody>{(data.weeklyStandings||[]).map((r,i)=><tr key={r.owner_id}><td><b>{i+1}</b></td><td><b>{r.owner_name}</b></td><td>{Number(r.points_so_far).toFixed(1)}</td><td><b>{Number(r.projected_points).toFixed(2)}</b></td><td>{Number(r.max_possible).toFixed(1)}</td><td>{Number(r.weekly_point_diff)>0?'+':''}{Number(r.weekly_point_diff||0)}</td></tr>)}</tbody></table></div></aside>
+  <div className="liveGamesPane"><div className="liveGamesToolbar"><div className="liveFilters"><button className={filter==='all'?'active':''} onClick={()=>setFilter('all')}>All</button><button className={filter==='mine'?'active':''} onClick={()=>setFilter('mine')}>My Team</button><button className={filter==='live'?'active liveFilterButton':''} onClick={()=>setFilter('live')}>Live{liveCount?` (${liveCount})`:''}</button></div></div>
+  {filter==='mine'&&!ownerId?<div className="card liveEmpty">Sign in to filter games to My Team.</div>:null}
+  {requestError&&<div className="notice">Live feed issue: {requestError}</div>}
+  {filtered.length===0&&!loading&&!(filter==='mine'&&!ownerId)?<div className="card liveEmpty">No games match this view in the current fantasy-week window.</div>:null}
+  <div className="compactGameList">{filtered.map(g=><div className={`card compactGameCard ${matchupClass(g)}`} key={g.cfbd_game_id}><div className="compactGameHeader"><b className={g.status==='in_progress'?'liveStatusText':''}>{gameState(g)}</b>{g.network?<span className="gameNetwork">{g.network}</span>:null}</div><TeamRow team={g.away} score={g.away_score} g={g} side="away"/><TeamRow team={g.home} score={g.home_score} g={g} side="home"/>{isFallback(g)?<small className="compactFallback">* 50/50 fallback</small>:null}</div>)}</div></div></div>
+ </div>
 }

@@ -1,7 +1,6 @@
 'use client';
-import Link from 'next/link';
-import {usePathname} from 'next/navigation';
+import Link from 'next/link';import {useEffect,useState} from 'react';import {usePathname} from 'next/navigation';
 export const nav=[['/','Standings'],['/live','Live'],['/my-team','My Team'],['/waivers','Waivers'],['/league','League']];
 const mobilePrimary=[['/','Standings','⌂'],['/live','Live','●'],['/my-team','My Team','▦'],['/waivers','Waivers','↕'],['/league','League','◎']];
 function active(path,h){return h==='/'?path===h:path.startsWith(h)}
-export function Nav(){const path=usePathname();return <><nav className="nav desktopNav">{nav.map(([h,l])=><Link className={active(path,h)?'active':''} key={h} href={h}>{l}</Link>)}</nav><nav className="mobileDock" aria-label="Primary navigation">{mobilePrimary.map(([h,l,icon])=><Link className={active(path,h)?'active':''} key={h} href={h}><span aria-hidden="true">{icon}</span><small>{l}</small></Link>)}</nav></>}
+export function Nav(){const path=usePathname();const [live,setLive]=useState(false);useEffect(()=>{let on=true;async function check(){try{const r=await fetch('/api/live-status',{cache:'no-store'}),j=await r.json();if(on)setLive(Boolean(j.live))}catch{}}check();const id=setInterval(check,60000);return()=>{on=false;clearInterval(id)}},[]);const cls=h=>`${active(path,h)?'active':''} ${h==='/live'&&live?'globalLive':''}`.trim();return <><nav className="nav desktopNav">{nav.map(([h,l])=><Link className={cls(h)} key={h} href={h}>{h==='/live'&&live?<span className="navLiveDot"/>:null}{l}</Link>)}</nav><nav className="mobileDock" aria-label="Primary navigation">{mobilePrimary.map(([h,l,icon])=><Link className={cls(h)} key={h} href={h}><span aria-hidden="true">{h==='/live'&&live?'●':icon}</span><small>{l}</small></Link>)}</nav></>}
