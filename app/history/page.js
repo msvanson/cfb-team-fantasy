@@ -1,4 +1,4 @@
-import {TeamName} from '../team-name';import {Nav} from '../nav';import {getWeeklyWinners,getOwnerWeeklySummary,getSeasonRecordBook,getAllStandings,getTeamDirectory,getWeeklySnapshots,getWeeklySnapshotGames,getOwnerWeeklyRecordStats,getDraftHistory,getWaiverTransactionHistory} from '../../lib/data';import HistoryTabs from './history-tabs';import {finalizeEndedFantasyWeeks} from '../../lib/weekly-snapshots';export const dynamic='force-dynamic';
+import {TeamName} from '../team-name';import {Nav} from '../nav';import {LeagueHeader} from '../league-header';import {getWeeklyWinners,getOwnerWeeklySummary,getSeasonRecordBook,getAllStandings,getTeamDirectory,getWeeklySnapshots,getWeeklySnapshotGames,getOwnerWeeklyRecordStats,getDraftHistory,getWaiverTransactionHistory} from '../../lib/data';import HistoryTabs from './history-tabs';import {finalizeEndedFantasyWeeks} from '../../lib/weekly-snapshots';export const dynamic='force-dynamic';
 
 function weekOrder(k){if(!k)return 999;const m=String(k).match(/Week\s+(\d+)/i);if(m)return Number(m[1]);if(k==='Conference Championships')return 100;if(k==='CFP')return 101;if(k==='National Championship')return 102;if(k==='Postseason')return 103;return 999}
 
@@ -20,7 +20,7 @@ export default async function History(){
 
 
  return <main className="shell">
-  <div className="topbar"><div><div className="brand">History</div><div className="sub">League archive, weekly winners and all-time records</div></div></div><Nav/>
+  <LeagueHeader/><Nav/><div className="pageContext"><b>History</b><span>League archive, weekly winners and all-time records</span></div>
 
   <section className="section grid">
    <div className="card"><div className="muted">{current?.year||2026} Current Leader</div><div className="kpi">{current?.leader_owner_name||'—'}</div><div>{current?.leader_points??0} pts</div></div>
