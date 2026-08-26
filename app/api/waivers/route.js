@@ -30,8 +30,8 @@ export async function GET(req){
  ]);
  const projectionMap=new Map((projections||[]).map(x=>[Number(x.team_id),Number(x.projected_points)]));
  const roster=(teams||[]).filter(t=>t.owner_id===ownerId);
- const available=(teams||[]).filter(t=>!t.is_owned&&Number(t.wins||0)<=4).map(t=>({...t,season_projected_points:projectionMap.has(Number(t.team_id))?projectionMap.get(Number(t.team_id)):null,eligible_drops:eligibleDrops(roster,t).map(x=>({team_id:x.team_id,school:x.school,conference_code:x.conference_code,roster_slot:x.roster_slot}))}));
- return NextResponse.json({ok:true,profile:auth.profile,period:period(),available,roster,claims:claims||[]});
+ const available=(teams||[]).filter(t=>!t.is_owned).map(t=>({...t,eligible:Number(t.wins||0)<=4,season_projected_points:projectionMap.has(Number(t.team_id))?projectionMap.get(Number(t.team_id)):null,eligible_drops:Number(t.wins||0)<=4?eligibleDrops(roster,t).map(x=>({team_id:x.team_id,school:x.school,conference_code:x.conference_code,roster_slot:x.roster_slot})):[]}));
+ return NextResponse.json({ok:true,profile:auth.profile,period:period(),available,eligible_count:available.filter(t=>t.eligible).length,roster,claims:claims||[]});
 }
 export async function POST(req){
  const auth=await authenticatedProfileFromRequest(req);if(!auth.ok)return NextResponse.json({ok:false,error:auth.error},{status:auth.status});
@@ -55,4 +55,18 @@ export async function DELETE(req){
  const {id}=await req.json(),s=sb();
  const {error}=await s.from('waiver_claims').update({status:'cancelled',updated_at:new Date().toISOString()}).eq('id',id).eq('owner_id',auth.profile.owner_id).eq('status','pending');
  return NextResponse.json(error?{ok:false,error:error.message}:{ok:true},{status:error?400:200});
+}
+
+export async function PATCH(req){
+ const auth=await authenticatedProfileFromRequest(req);if(!auth.ok)return NextResponse.json({ok:false,error:auth.error},{status:auth.status});
+ const ownerId=auth.profile.owner_id;if(!ownerId)return NextResponse.json({ok:false,error:'Account is not assigned to a roster'},{status:403});
+ const {id,direction}=await req.json();if(!['up','down'].includes(direction))return NextResponse.json({ok:false,error:'Invalid direction'},{status:400});
+ const s=sb(),wp=period();const {data:claims,error}=await s.from('waiver_claims').select('id,priority').eq('season_id',1).eq('owner_id',ownerId).eq('waiver_period_key',wp.key).eq('status','pending').order('priority');
+ if(error)return NextResponse.json({ok:false,error:error.message},{status:400});
+ const i=(claims||[]).findIndex(c=>Number(c.id)===Number(id)),j=direction==='up'?i-1:i+1;if(i<0||j<0||j>=claims.length)return NextResponse.json({ok:true});
+ const a=claims[i],b=claims[j],temp=1000000+Number(a.id);
+ let e=(await s.from('waiver_claims').update({priority:temp,updated_at:new Date().toISOString()}).eq('id',a.id).eq('owner_id',ownerId).eq('status','pending')).error;
+ if(!e)e=(await s.from('waiver_claims').update({priority:a.priority,updated_at:new Date().toISOString()}).eq('id',b.id).eq('owner_id',ownerId).eq('status','pending')).error;
+ if(!e)e=(await s.from('waiver_claims').update({priority:b.priority,updated_at:new Date().toISOString()}).eq('id',a.id).eq('owner_id',ownerId).eq('status','pending')).error;
+ return NextResponse.json(e?{ok:false,error:e.message}:{ok:true},{status:e?400:200});
 }
