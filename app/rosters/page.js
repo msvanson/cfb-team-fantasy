@@ -54,7 +54,7 @@ export default async function Page(){
             {ts.sort((a,b)=>a.conference_display_order-b.conference_display_order).map(t=>
               <div className="rosterRow" key={t.team_id}>
                 <span>
-                  <Link className="teamLink" href={`/teams/${t.team_id}`}><b><TeamName team={t} size="sm"/></b></Link>
+                  <b><TeamName team={t} size="sm"/></b>
                   <small>{t.conference_code}</small>
                   <RosterGameStatus teamId={t.team_id}/>
                 </span>
@@ -88,7 +88,7 @@ export default async function Page(){
             <summary>Previous Teams ({previousTeams.filter(x=>x.owner_name===owner).length})</summary>
             <div className="previousTeamRows">
               {previousTeams.filter(x=>x.owner_name===owner).map(x=><div className="previousTeamRow" key={x.ownership_id}>
-                <span><Link className="teamLink" href={`/teams/${x.team_id}`}><b><TeamName team={x} size="sm"/></b></Link><small>{x.conference_code||''}</small></span>
+                <span><b><TeamName team={x} size="sm"/></b><small>{x.conference_code||''}</small></span>
                 <span className="previousTeamFrozen"><span><small>Fantasy earned</small><b>{x.fantasy_points_earned}</b></span><span><small>Wins owned</small><b>{x.wins_while_owned}</b></span><span><small>Pt diff owned</small><b>{Number(x.point_differential_while_owned)>0?'+':''}{x.point_differential_while_owned}</b></span></span>
                 <small className="muted">Owned {new Date(x.acquired_at).toLocaleDateString()} – {new Date(x.released_at).toLocaleDateString()}</small>
               </div>)}
