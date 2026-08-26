@@ -1,0 +1,2 @@
+import {Nav} from '../nav';import MyTeamClient from './my-team-client';export const dynamic='force-dynamic';
+export default function Page(){return <main className="shell"><div className="topbar myTeamTopbar"><div><div className="brand">My Team</div><div className="sub">Your roster, projections and matchup history</div></div><a className="accountIconButton" href="/account" aria-label="Account settings" title="Account settings">⚙</a></div><Nav/><MyTeamClient/></main>}
