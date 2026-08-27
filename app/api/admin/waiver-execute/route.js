@@ -13,7 +13,15 @@ export async function POST(req){
   s.from('team_directory').select('*').eq('season_id',1),
   s.from('official_waiver_order').select('*').eq('season_id',1).order('waiver_priority')
  ]);
- if(ce||te||se)return NextResponse.json({ok:false,error:(ce||te||se).message},{status:500});
+ if (ce || te || se) {
+  return NextResponse.json(
+    {
+      ok: false,
+      error: 'Waiver execution data temporarily unavailable'
+    },
+    { status: 500 }
+  );
+}
  if(!(claims||[]).length)return NextResponse.json({ok:false,error:'No pending claims for '+key},{status:400});
  const order=[...(standings||[])].sort((a,b)=>Number(a.waiver_priority)-Number(b.waiver_priority)), oi=new Map(order.map(o=>[Number(o.owner_id),Number(o.waiver_priority)])), tm=new Map((teams||[]).map(t=>[Number(t.team_id),t]));
  const rosters=new Map(order.map(o=>[Number(o.owner_id),(teams||[]).filter(t=>Number(t.owner_id)===Number(o.owner_id)).map(t=>({...t}))]));
@@ -26,8 +34,45 @@ export async function POST(req){
    plan.push({claim:c,owner:o,target,drop,round,order:oi.get(oid),competing});claimed.add(aid);progress=true;
    roster[roster.findIndex(t=>Number(t.team_id)===did)]={...target,owner_id:oid,is_owned:true};break;
  }}round++;if(round>100)break}
- const effectiveAt=new Date().toISOString(),done=[];
- for(const x of plan){const {data,error}=await s.rpc('execute_waiver_transaction',{p_season_id:1,p_period:key,p_owner_id:Number(x.owner.owner_id),p_add_team_id:Number(x.target.team_id),p_drop_team_id:Number(x.drop.team_id),p_claim_id:Number(x.claim.id),p_round:x.round,p_order:x.order,p_competing:x.competing,p_effective_at:effectiveAt});if(error)return NextResponse.json({ok:false,error:`Execution stopped: ${error.message}`,completed:done},{status:500});done.push({transaction_id:data,round:x.round,owner:x.owner.owner_name,add:x.target.school,drop:x.drop.school});}
+ const effectiveAt = new Date().toISOString();
+const done = [];
+
+for (const x of plan) {
+  const { data, error } = await s.rpc(
+    'execute_waiver_transaction',
+    {
+      p_season_id: 1,
+      p_period: key,
+      p_owner_id: Number(x.owner.owner_id),
+      p_add_team_id: Number(x.target.team_id),
+      p_drop_team_id: Number(x.drop.team_id),
+      p_claim_id: Number(x.claim.id),
+      p_round: x.round,
+      p_order: x.order,
+      p_competing: x.competing,
+      p_effective_at: effectiveAt
+    }
+  );
+
+  if (error) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: 'Waiver execution stopped because of an internal error',
+        completed: done
+      },
+      { status: 500 }
+    );
+  }
+
+  done.push({
+    transaction_id: data,
+    round: x.round,
+    owner: x.owner.owner_name,
+    add: x.target.school,
+    drop: x.drop.school
+  });
+}
  for(const l of losers)await s.from('waiver_claims').update({status:'unsuccessful',failure_reason:l.reason,processed_at:effectiveAt,updated_at:effectiveAt}).eq('id',l.id).eq('status','pending');
  return NextResponse.json({ok:true,period:key,effective_at:effectiveAt,transactions:done,unsuccessful:losers.length,message:'Manual waiver run completed.'});
 }

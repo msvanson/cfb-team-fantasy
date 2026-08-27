@@ -48,5 +48,13 @@ export async function GET(){
     marketLabels:labels,
     markets
   });
- }catch(e){return NextResponse.json({ok:false,error:e?.message||String(e)},{status:500})}
+ } catch {
+  return NextResponse.json(
+    {
+      ok: false,
+      error: 'ESPN futures data temporarily unavailable'
+    },
+    { status: 500 }
+  );
+}
 }
