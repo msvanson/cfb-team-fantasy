@@ -15,7 +15,15 @@ export async function GET(){
   s.from('owners').select('id,name').eq('season_id',1),
   s.from('team_directory').select('team_id,school').eq('season_id',1)
  ]);
- if(he||le||te||fte||lge||ee||oe||tde)return NextResponse.json({ok:false,error:(he||le||te||fte||lge||ee||oe||tde).message},{status:500});
+ if (he || le || te || fte || lge || ee || oe || tde) {
+  return NextResponse.json(
+    {
+      ok: false,
+      error: 'Ownership scoring data temporarily unavailable'
+    },
+    { status: 500 }
+  );
+}
  const om=new Map((owners||[]).map(x=>[Number(x.id),x.name])),tm=new Map((teams||[]).map(x=>[Number(x.team_id),x.school]));
  const historyRows=(history||[]).map(h=>({...h,owner:om.get(Number(h.owner_id)),team:tm.get(Number(h.team_id))}));
  const ledgerRows=(ledger||[]).map(g=>({...g,owner:om.get(Number(g.owner_id)),team:tm.get(Number(g.team_id))}));
