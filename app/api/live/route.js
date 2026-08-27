@@ -28,12 +28,16 @@ const supabase = createClient(
 
 export async function GET(request) {
   try{await finalizeEndedFantasyWeeks(new Date())}catch{}
-  const url = new URL(request.url);
-  const force = url.searchParams.get('force') === '1';
-
   let sync = null;
-  try { sync = await syncCfbd({ forceSchedule: force }); }
-  catch (error) { sync = { ok:false, error:error?.message || String(error) }; }
+
+try {
+  sync = await syncCfbd({ forceSchedule: false });
+} catch {
+  sync = {
+    ok: false,
+    error: 'Live data sync temporarily unavailable'
+  };
+}
 
   const now = new Date();
   const fantasyWeek = currentFantasyWeek(now);
@@ -63,9 +67,16 @@ export async function GET(request) {
     supabase.from('games').select('id',{count:'exact',head:true}).eq('season_id',1)
   ]);
 
-  if(gameError||dirError||ownerError||oddsError||weeklyError||countError){
-    return NextResponse.json({ok:false,error:gameError?.message||dirError?.message||ownerError?.message||oddsError?.message||weeklyError?.message||countError?.message,sync},{status:500});
-  }
+  if (gameError || dirError || ownerError || oddsError || weeklyError || countError) {
+  return NextResponse.json(
+    {
+      ok: false,
+      error: 'Live data temporarily unavailable',
+      sync
+    },
+    { status: 500 }
+  );
+}
 
   const byId=new Map((directory||[]).map(t=>[t.team_id,t]));
   const oddsByGame=new Map((weeklyOdds||[]).map(o=>[String(o.cfbd_game_id),o]));
