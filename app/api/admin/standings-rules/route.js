@@ -9,6 +9,14 @@ export async function GET(){
   s.from('official_waiver_order').select('*').eq('season_id',1).order('waiver_priority'),
   s.from('official_final_standings').select('*').eq('season_id',1).order('final_rank')
  ]);
- if(a||b||c)return NextResponse.json({ok:false,error:(a||b||c).message},{status:500});
+ if (a || b || c) {
+  return NextResponse.json(
+    {
+      ok: false,
+      error: 'Standings rule data temporarily unavailable'
+    },
+    { status: 500 }
+  );
+}
  return NextResponse.json({ok:true,regular_rule:['Fantasy points','Point differential','Higher draft order'],waiver_rule:'Exact reverse of official regular-season standings',final_rule:['Fantasy points','Conference championship wins','Conference championship appearances','CFP teams','Most wins by a single team','Full-season point differential'],regular,waivers,finals});
 }
