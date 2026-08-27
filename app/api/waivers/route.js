@@ -23,11 +23,21 @@ function period(){
 export async function GET(req){
  const auth=await authenticatedProfileFromRequest(req);if(!auth.ok)return NextResponse.json({ok:false,error:auth.error},{status:auth.status});
  const s=sb(),ownerId=auth.profile.owner_id;if(!ownerId)return NextResponse.json({ok:false,error:'Account is not assigned to a roster'},{status:403});
- const [{data:teams},{data:claims},{data:projections}]=await Promise.all([
+ const [teamsResult, claimsResult, projectionsResult] = await Promise.all([
    s.from('team_directory').select('*').eq('season_id',1),
    s.from('waiver_claims').select('*').eq('season_id',1).eq('owner_id',ownerId).eq('status','pending').order('priority'),
    s.from('latest_team_projections').select('team_id,projected_points').eq('season_id',1)
  ]);
+ if (teamsResult.error || claimsResult.error || projectionsResult.error) {
+  return NextResponse.json(
+    { ok: false, error: 'Waiver data temporarily unavailable' },
+    { status: 500 }
+  );
+}
+
+const teams = teamsResult.data || [];
+const claims = claimsResult.data || [];
+const projections = projectionsResult.data || [];
  const projectionMap=new Map((projections||[]).map(x=>[Number(x.team_id),Number(x.projected_points)]));
  const roster=(teams||[]).filter(t=>t.owner_id===ownerId);
  const available=(teams||[]).filter(t=>!t.is_owned).map(t=>({...t,eligible:Number(t.wins||0)<=4,season_projected_points:projectionMap.has(Number(t.team_id))?projectionMap.get(Number(t.team_id)):null,eligible_drops:Number(t.wins||0)<=4?eligibleDrops(roster,t).map(x=>({team_id:x.team_id,school:x.school,conference_code:x.conference_code,roster_slot:x.roster_slot})):[]}));
