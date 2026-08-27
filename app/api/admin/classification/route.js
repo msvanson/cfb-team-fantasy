@@ -13,6 +13,13 @@ export async function POST(req){
       p_playoff_round:b.playoffRound||null,
       p_bowl_name:b.bowlName||null
     });
-    await adminRpc('admin_log_action',{p_action_type:'game_override',p_summary:`Postseason classification override for game ${b.gameId}`,p_details:b});return NextResponse.json({ok:true});
-  }catch(e){return NextResponse.json({ok:false,error:e?.message||String(e)},{status:500})}
+    await adminRpc('admin_log_action',{p_action_type:'game_override',p_summary:`Postseason classification override for game ${b.gameId}`,p_details:b});return NextResponse.json({} catch {
+  return NextResponse.json(
+    {
+      ok: false,
+      error: 'Game classification update failed because of an internal error'
+    },
+    { status: 500 }
+  );
+}
 }
