@@ -47,13 +47,16 @@ const roots=s=>{
 
 function exactTeam(api,school,mascot){
   const a=norm(api);
+
   for(const r of roots(school)){
     if(a===r)return true;
+
     if(a.startsWith(r+' ')){
       if(mascot)return a===`${r} ${norm(mascot)}`;
       return true;
     }
   }
+
   return false;
 }
 
@@ -84,18 +87,25 @@ function oddsList(x){
 }
 
 function findEvent(pool,g,h,a){
-  const candidates=pool.filter(e=>hours(e.date,g.start_time)<=1);
+  const candidates=pool.filter(
+    e=>hours(e.date,g.start_time)<=1
+  );
 
   if(h&&a){
     return candidates.find(e=>
-      (exactTeam(e.home,h.school,h.mascot)&&
-       exactTeam(e.away,a.school,a.mascot))||
-      (exactTeam(e.home,a.school,a.mascot)&&
-       exactTeam(e.away,h.school,h.mascot))
+      (
+        exactTeam(e.home,h.school,h.mascot)&&
+        exactTeam(e.away,a.school,a.mascot)
+      )||
+      (
+        exactTeam(e.home,a.school,a.mascot)&&
+        exactTeam(e.away,h.school,h.mascot)
+      )
     )||null;
   }
 
   const known=h||a;
+
   if(!known)return null;
 
   const m=candidates.filter(e=>
@@ -134,10 +144,16 @@ function latestTime(book){
 
 function chunks(items,size){
   const out=[];
+
   for(let i=0;i<items.length;i+=size){
     out.push(items.slice(i,i+size));
   }
+
   return out;
+}
+
+function isMarketSource(source){
+  return String(source||'').startsWith('market_');
 }
 
 async function authorized(req){
@@ -197,6 +213,8 @@ export async function GET(req){
   try{
 
     const now=new Date();
+    const nowIso=now.toISOString();
+
     const fantasyWeek=currentFantasyWeek(now);
 
     const {data:games,error:ge}=await supabase
@@ -213,12 +231,10 @@ export async function GET(req){
     if(ge)throw ge;
 
     /*
-     * IMPORTANT:
-     * Once kickoff happens, stop touching that game's odds row.
+     * Pregame updater NEVER touches a game after kickoff.
      *
-     * This preserves the final pregame Vegas probability instead of
-     * replacing it with a 50/50 fallback when the provider removes
-     * the game from its pending-event pool.
+     * That freezes the latest closing_* values once the game begins.
+     * Live odds will be handled separately.
      */
     const upcoming=(games||[]).filter(
       g=>new Date(g.start_time)>now
@@ -227,7 +243,10 @@ export async function GET(req){
     const ids=[
       ...new Set(
         upcoming
-          .flatMap(g=>[g.home_team_id,g.away_team_id])
+          .flatMap(g=>[
+            g.home_team_id,
+            g.away_team_id
+          ])
           .filter(Boolean)
       )
     ];
@@ -235,11 +254,12 @@ export async function GET(req){
     if(!ids.length){
       return NextResponse.json({
         ok:true,
-        mode:'WEEKLY_ODDS_CACHE_REFRESH_V2',
+        mode:'WEEKLY_ODDS_CACHE_REFRESH_V3',
         externalRequestsUsed:0,
         relevantGames:0,
         rowsSaved:0,
         marketGames:0,
+        cachedMarketGames:0,
         fallbackGames:0,
         sameOwnerGames:0,
         reason:'No upcoming games in current fantasy week'
@@ -268,11 +288,12 @@ export async function GET(req){
     if(!relevant.length){
       return NextResponse.json({
         ok:true,
-        mode:'WEEKLY_ODDS_CACHE_REFRESH_V2',
+        mode:'WEEKLY_ODDS_CACHE_REFRESH_V3',
         externalRequestsUsed:0,
         relevantGames:0,
         rowsSaved:0,
         marketGames:0,
+        cachedMarketGames:0,
         fallbackGames:0,
         sameOwnerGames:0,
         reason:'No upcoming owned-team games'
@@ -280,8 +301,51 @@ export async function GET(req){
     }
 
     /*
+     * Read our previous cache FIRST.
+     *
+     * If a sportsbook temporarily removes a moneyline,
+     * we preserve our last valid Vegas probability instead
+     * of reverting the game to 50/50.
+     */
+    const relevantGameIds=relevant.map(
+      g=>g.cfbd_game_id
+    );
+
+    const {data:existing,error:ee}=await supabase
+      .from('weekly_game_odds')
+      .select(`
+        cfbd_game_id,
+        odds_api_event_id,
+        home_win_probability,
+        away_win_probability,
+        projection_source,
+        books_used,
+        draftkings_home_decimal,
+        draftkings_away_decimal,
+        fanduel_home_decimal,
+        fanduel_away_decimal,
+        odds_updated_at,
+        closing_home_win_probability,
+        closing_away_win_probability,
+        closing_odds_updated_at,
+        closing_fetched_at,
+        closing_books_used,
+        closing_source
+      `)
+      .eq('season_id',1)
+      .in('cfbd_game_id',relevantGameIds);
+
+    if(ee)throw ee;
+
+    const previousByGame=new Map(
+      (existing||[]).map(
+        row=>[String(row.cfbd_game_id),row]
+      )
+    );
+
+    /*
      * CALL 1:
-     * Fetch the entire NCAAF pending-event pool once.
+     * Discover pending NCAAF events.
      */
     const poolResult=await providerJson(
       `${BASE}/events`+
@@ -297,34 +361,48 @@ export async function GET(req){
     let calls=1;
     let lastRateLimit=poolResult.rateLimit;
 
-    /*
-     * Match our Supabase games to Odds API events.
-     */
     const matched=relevant.map(g=>{
       const h=tm.get(g.home_team_id)||null;
       const a=tm.get(g.away_team_id)||null;
       const e=findEvent(pool,g,h,a);
 
-      return{g,h,a,e};
+      return{
+        g,
+        h,
+        a,
+        e,
+        previous:previousByGame.get(
+          String(g.cfbd_game_id)
+        )||null
+      };
     });
 
     const eventIds=[
       ...new Set(
-        matched.map(x=>x.e?.id).filter(Boolean)
+        matched
+          .map(x=>x.e?.id)
+          .filter(Boolean)
       )
     ];
 
     /*
-     * Fetch odds in batches instead of one request per game.
+     * Batch up to 10 events per Odds-API call.
      */
     const oddsByEvent=new Map();
 
-    for(const batch of chunks(eventIds,MULTI_BATCH_SIZE)){
+    for(const batch of chunks(
+      eventIds,
+      MULTI_BATCH_SIZE
+    )){
 
       const result=await providerJson(
         `${BASE}/odds/multi`+
-        `?eventIds=${encodeURIComponent(batch.join(','))}`+
-        `&bookmakers=${encodeURIComponent(BOOKMAKERS)}`+
+        `?eventIds=${encodeURIComponent(
+          batch.join(',')
+        )}`+
+        `&bookmakers=${encodeURIComponent(
+          BOOKMAKERS
+        )}`+
         `&apiKey=${encodeURIComponent(key)}`
       );
 
@@ -332,14 +410,23 @@ export async function GET(req){
       lastRateLimit=result.rateLimit;
 
       for(const event of oddsList(result.body)){
-        oddsByEvent.set(String(event.id),event);
+        oddsByEvent.set(
+          String(event.id),
+          event
+        );
       }
     }
 
     const rows=[];
     const ownerTotals={};
 
-    for(const {g,h,a,e} of matched){
+    for(const {
+      g,
+      h,
+      a,
+      e,
+      previous
+    } of matched){
 
       const sameOwner=
         h?.is_owned&&
@@ -348,6 +435,7 @@ export async function GET(req){
 
       let hp=.5;
       let ap=.5;
+
       let source='fallback_50_50';
       let books=0;
 
@@ -355,18 +443,28 @@ export async function GET(req){
       let fd=null;
       let updated=null;
 
+      let freshMarket=false;
+      let cachedMarket=false;
+
       if(sameOwner){
 
         source='same_owner_guaranteed';
 
       }else if(e){
 
-        const ob=oddsByEvent.get(String(e.id));
+        const ob=oddsByEvent.get(
+          String(e.id)
+        );
 
         if(ob){
 
-          dk=ml(ob?.bookmakers?.DraftKings);
-          fd=ml(ob?.bookmakers?.FanDuel);
+          dk=ml(
+            ob?.bookmakers?.DraftKings
+          );
+
+          fd=ml(
+            ob?.bookmakers?.FanDuel
+          );
 
           const probs=[
             fair(dk?.home,dk?.away),
@@ -389,16 +487,73 @@ export async function GET(req){
               probs.length===2
                 ?'market_2_book'
                 :'market_1_book';
+
+            freshMarket=true;
           }
 
           updated=[
-            latestTime(ob?.bookmakers?.DraftKings),
-            latestTime(ob?.bookmakers?.FanDuel)
+            latestTime(
+              ob?.bookmakers?.DraftKings
+            ),
+            latestTime(
+              ob?.bookmakers?.FanDuel
+            )
           ]
             .filter(Boolean)
             .sort()
             .pop()||null;
         }
+      }
+
+      /*
+       * SAFETY:
+       * If we had valid Vegas odds previously but this
+       * refresh does not return a usable line, preserve
+       * the last known market probability.
+       */
+      if(
+        !sameOwner&&
+        !freshMarket&&
+        previous&&
+        isMarketSource(
+          previous.projection_source
+        )&&
+        previous.home_win_probability!=null&&
+        previous.away_win_probability!=null
+      ){
+
+        hp=Number(
+          previous.home_win_probability
+        );
+
+        ap=Number(
+          previous.away_win_probability
+        );
+
+        source='market_cached';
+
+        books=Number(
+          previous.books_used||0
+        );
+
+        dk={
+          home:
+            previous.draftkings_home_decimal,
+          away:
+            previous.draftkings_away_decimal
+        };
+
+        fd={
+          home:
+            previous.fanduel_home_decimal,
+          away:
+            previous.fanduel_away_decimal
+        };
+
+        updated=
+          previous.odds_updated_at||null;
+
+        cachedMarket=true;
       }
 
       if(sameOwner){
@@ -419,14 +574,79 @@ export async function GET(req){
         }
       }
 
+      /*
+       * Every fresh pregame market quote becomes the
+       * newest closing-line candidate.
+       *
+       * At kickoff this route stops touching the game,
+       * which automatically freezes the final candidate.
+       */
+      const closingHome=
+        freshMarket
+          ?hp
+          :previous
+            ?.closing_home_win_probability
+            ??null;
+
+      const closingAway=
+        freshMarket
+          ?ap
+          :previous
+            ?.closing_away_win_probability
+            ??null;
+
+      const closingUpdated=
+        freshMarket
+          ?updated
+          :previous
+            ?.closing_odds_updated_at
+            ??null;
+
+      const closingFetched=
+        freshMarket
+          ?nowIso
+          :previous
+            ?.closing_fetched_at
+            ??null;
+
+      const closingBooks=
+        freshMarket
+          ?books
+          :previous
+            ?.closing_books_used
+            ??null;
+
+      const closingSource=
+        freshMarket
+          ?source
+          :previous
+            ?.closing_source
+            ??null;
+
       rows.push({
+
         season_id:1,
-        cfbd_game_id:g.cfbd_game_id,
-        odds_api_event_id:e?.id||null,
 
-        home_team_id:g.home_team_id,
-        away_team_id:g.away_team_id,
+        cfbd_game_id:
+          g.cfbd_game_id,
 
+        odds_api_event_id:
+          e?.id||
+          previous?.odds_api_event_id||
+          null,
+
+        home_team_id:
+          g.home_team_id,
+
+        away_team_id:
+          g.away_team_id,
+
+        /*
+         * CURRENT EFFECTIVE PROJECTION
+         *
+         * The Weekly tab can continue reading these
+         * existing fields unchanged.
+         */
         home_win_probability:hp,
         away_win_probability:ap,
 
@@ -434,25 +654,60 @@ export async function GET(req){
         books_used:books,
 
         draftkings_home_decimal:
-          dk?.home?Number(dk.home):null,
+          dk?.home!=null
+            ?Number(dk.home)
+            :null,
 
         draftkings_away_decimal:
-          dk?.away?Number(dk.away):null,
+          dk?.away!=null
+            ?Number(dk.away)
+            :null,
 
         fanduel_home_decimal:
-          fd?.home?Number(fd.home):null,
+          fd?.home!=null
+            ?Number(fd.home)
+            :null,
 
         fanduel_away_decimal:
-          fd?.away?Number(fd.away):null,
+          fd?.away!=null
+            ?Number(fd.away)
+            :null,
 
         odds_updated_at:updated,
-        fetched_at:new Date().toISOString(),
+        fetched_at:nowIso,
+
+        /*
+         * FROZEN CLOSING LINE STORAGE
+         */
+        closing_home_win_probability:
+          closingHome,
+
+        closing_away_win_probability:
+          closingAway,
+
+        closing_odds_updated_at:
+          closingUpdated,
+
+        closing_fetched_at:
+          closingFetched,
+
+        closing_books_used:
+          closingBooks,
+
+        closing_source:
+          closingSource,
+
+        game_phase:'pregame',
 
         details:{
           home:h?.school||null,
           away:a?.school||null,
-          home_owner:h?.owner_name||null,
-          away_owner:a?.owner_name||null
+          home_owner:
+            h?.owner_name||null,
+          away_owner:
+            a?.owner_name||null,
+          fresh_market:freshMarket,
+          cached_market:cachedMarket
         }
       });
     }
@@ -463,39 +718,82 @@ export async function GET(req){
         .from('weekly_game_odds')
         .upsert(
           rows,
-          {onConflict:'season_id,cfbd_game_id'}
+          {
+            onConflict:
+              'season_id,cfbd_game_id'
+          }
         );
 
       if(ue)throw ue;
     }
 
     return NextResponse.json({
+
       ok:true,
-      mode:'WEEKLY_ODDS_CACHE_REFRESH_V2',
+
+      mode:
+        'WEEKLY_ODDS_CACHE_REFRESH_V3',
 
       externalRequestsUsed:calls,
 
-      providerEventPoolSize:pool.length,
-      matchedProviderEvents:eventIds.length,
+      providerEventPoolSize:
+        pool.length,
 
-      relevantGames:relevant.length,
-      rowsSaved:rows.length,
+      matchedProviderEvents:
+        eventIds.length,
 
-      ownerProjectedWinPoints:ownerTotals,
+      relevantGames:
+        relevant.length,
 
-      fallbackGames:
+      rowsSaved:
+        rows.length,
+
+      ownerProjectedWinPoints:
+        ownerTotals,
+
+      freshMarketGames:
         rows.filter(
-          x=>x.projection_source==='fallback_50_50'
+          x=>
+            x.projection_source===
+              'market_2_book'||
+            x.projection_source===
+              'market_1_book'
+        ).length,
+
+      cachedMarketGames:
+        rows.filter(
+          x=>
+            x.projection_source===
+              'market_cached'
         ).length,
 
       marketGames:
         rows.filter(
-          x=>x.projection_source.startsWith('market_')
+          x=>
+            isMarketSource(
+              x.projection_source
+            )
+        ).length,
+
+      fallbackGames:
+        rows.filter(
+          x=>
+            x.projection_source===
+              'fallback_50_50'
         ).length,
 
       sameOwnerGames:
         rows.filter(
-          x=>x.projection_source==='same_owner_guaranteed'
+          x=>
+            x.projection_source===
+              'same_owner_guaranteed'
+        ).length,
+
+      closingCandidates:
+        rows.filter(
+          x=>
+            x.closing_home_win_probability
+              !=null
         ).length,
 
       rateLimit:lastRateLimit
