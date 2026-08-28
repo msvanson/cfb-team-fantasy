@@ -13,9 +13,25 @@ export default function AccountClient(){
    const {data}=await supabase.from('user_profiles').select('user_id,username,owner_id,role,owners(name)').eq('user_id',user.id).maybeSingle();
    setProfile(data||null);
  }
- useEffect(()=>{
-   supabase.auth.getSession().then(({data})=>{setSession(data.session);loadProfile(data.session?.user)});
-   const {data:{subscription}}=supabase.auth.onAuthStateChange((event,s)=>{setSession(s);loadProfile(s?.user);if(event==='PASSWORD_RECOVERY')setRecovering(true)});
+  useEffect(()=>{
+   const query=new URLSearchParams(window.location.search);
+   const hash=new URLSearchParams(window.location.hash.replace(/^#/,''));
+   const recoveryRequested=query.get('recovery')==='1'||hash.get('type')==='recovery';
+
+   if(recoveryRequested)setRecovering(true);
+
+   const {data:{subscription}}=supabase.auth.onAuthStateChange((event,s)=>{
+     setSession(s);
+     loadProfile(s?.user);
+     if(event==='PASSWORD_RECOVERY')setRecovering(true);
+   });
+
+   supabase.auth.getSession().then(({data})=>{
+     setSession(data.session);
+     loadProfile(data.session?.user);
+     if(recoveryRequested&&data.session)setRecovering(true);
+   });
+
    return()=>subscription.unsubscribe();
  },[]);
 
@@ -35,8 +51,8 @@ export default function AccountClient(){
    }catch(e){setMsg(e.message||String(e))}finally{setBusy(false)}
  }
  async function signOut(){await fetch('/api/auth/commissioner-session',{method:'DELETE'});await supabase.auth.signOut();setRecovering(false);setMsg('Signed out.')}
- async function reset(){if(!email)return setMsg('Enter your email first.');const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:`${location.origin}/account`});setMsg(error?error.message:'Password reset email sent.')}
- async function updatePassword(e){e.preventDefault();setBusy(true);const {error}=await supabase.auth.updateUser({password:newPassword});setBusy(false);if(error)return setMsg(error.message);setRecovering(false);setNewPassword('');setMsg('Password updated successfully.');}
+ async function reset(){if(!email)return setMsg('Enter your email first.');const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:`${location.origin}/account?recovery=1`});setMsg(error?error.message:'Password reset email sent.')}
+ async function updatePassword(e){e.preventDefault();setBusy(true);const {error}=await supabase.auth.updateUser({password:newPassword});setBusy(false);if(error)return setMsg(error.message);setRecovering(false);setNewPassword('');window.history.replaceState({},'', '/account');setMsg('Password updated successfully.');}
  async function openCommissioner(){
    const {data}=await supabase.auth.getSession();const token=data.session?.access_token;
    if(!token)return setMsg('Your sign-in session has expired. Please sign in again.');
