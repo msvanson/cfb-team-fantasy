@@ -56,7 +56,7 @@ export function AdminPanel({teams}){
 
   const [msg,setMsg]=useState('');
   const [qa,setQa]=useState(null);
-  const [sdio,setSdio]=useState(null);const [projResult,setProjResult]=useState(null);const [projectionQa,setProjectionQa]=useState(null);const [espnFutures,setEspnFutures]=useState(null);const [weeklyOddsTest,setWeeklyOddsTest]=useState(null);const [winTotalsInspect,setWinTotalsInspect]=useState(null);
+  const [sdio,setSdio]=useState(null);const [projResult,setProjResult]=useState(null);const [projectionQa,setProjectionQa]=useState(null);const [espnFutures,setEspnFutures]=useState(null);const [weeklyOddsTest,setWeeklyOddsTest]=useState(null);const [winTotalsInspect,setWinTotalsInspect]=useState(null);const [oddsFuturesDiagnostic,setOddsFuturesDiagnostic]=useState(null);
   const [health,setHealth]=useState(null);
   const [audit,setAudit]=useState([]);
   const [teamId,setTeamId]=useState(teams[0]?.team_id||'');
@@ -89,7 +89,20 @@ export function AdminPanel({teams}){
 
   async function testWeeklyOdds(){setMsg('Testing NCAAF weekly odds…');const r=await fetch('/api/admin/weekly-odds-test',{cache:'no-store'});const j=await r.json();setWeeklyOddsTest(j);setMsg(r.ok?'Weekly odds test complete':(j.error||'Weekly odds test failed'))}
 
-  async function inspectEspnFutures(){setMsg('Inspecting ESPN 2026 futures…');const r=await fetch('/api/admin/espn-futures',{cache:'no-store'});const j=await r.json();setEspnFutures(j);setMsg(r.ok?'ESPN futures inspection complete':(j.error||'ESPN futures inspection failed'))}
+  async function inspectEspnFutures(){
+  setMsg('Inspecting ESPN 2026 futures…');
+  const r=await fetch('/api/admin/espn-futures',{cache:'no-store'});
+  const j=await r.json();
+  setEspnFutures(j);
+  setMsg(r.ok?'ESPN futures inspection complete':(j.error||'ESPN futures inspection failed'));
+}
+  async function inspectOddsFutures(){
+  setMsg('Inspecting Odds API NCAAF futures…');
+  const r=await fetch('/api/admin/odds-futures-diagnostic',{cache:'no-store'});
+  const j=await r.json();
+  setOddsFuturesDiagnostic(j);
+  setMsg(r.ok?'Odds API futures diagnostic complete':(j.error||'Odds API futures diagnostic failed'));
+}
 
   async function runProjectionQa(){setMsg('Running projection QA…');const r=await fetch('/api/admin/projection-qa',{cache:'no-store'});const j=await r.json();if(r.ok){setProjectionQa(j.qa);setMsg('Projection QA complete')}else setMsg(j.error||'Projection QA failed')}
 
@@ -238,6 +251,28 @@ export function AdminPanel({teams}){
     {(espnFutures.markets||[]).slice(0,30).map((m,i)=><div className="card" key={i}><div><b>{m.display||m.name||'Market'}</b></div><div className="muted">Type: {String(m.type||'—')} · Providers: {m.providerCount} · Book entries: {m.totalBooks}</div><div className="muted wrapText">Fields: {(m.topLevelFields||[]).join(', ')}</div><div className="muted wrapText">{JSON.stringify(m.providers)}</div></div>)}
   </div>}
   {espnFutures&&!espnFutures.ok&&<div className="notice">{espnFutures.error}</div>}
+</div>
+
+    <div className="sectionTitle"><h2>Odds API Futures Diagnostic</h2><span className="muted">2026 · read-only provider test</span></div>
+<div className="card">
+  <div className="qaTop">
+    <div>
+      <b>Inspect Odds API NCAAF futures</b>
+      <div className="muted">Checks for season-long NCAAF futures using one provider request. No database changes are made.</div>
+    </div>
+    <button className="button" onClick={inspectOddsFutures}>Run Odds API Futures Diagnostic</button>
+  </div>
+
+  {oddsFuturesDiagnostic&&(
+    <pre style={{
+      whiteSpace:'pre-wrap',
+      overflowWrap:'anywhere',
+      marginTop:'12px',
+      fontSize:'12px'
+    }}>
+      {JSON.stringify(oddsFuturesDiagnostic,null,2)}
+    </pre>
+  )}
 </div>
 
 
