@@ -5,7 +5,7 @@ import {currentFantasyWeek} from '../../../../lib/fantasy-weeks';
 
 const BASE='https://api.odds-api.io/v3';
 const BOOKMAKERS='DraftKings,FanDuel';
-const MULTI_BATCH_SIZE=20;
+const MULTI_BATCH_SIZE=10;
 
 const supabase=createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
