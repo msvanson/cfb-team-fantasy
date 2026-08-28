@@ -7,6 +7,7 @@ function list(value) {
   if (Array.isArray(value)) return value;
   if (Array.isArray(value?.data)) return value.data;
   if (Array.isArray(value?.events)) return value.events;
+  if (Array.isArray(value?.leagues)) return value.leagues;
   return [];
 }
 
@@ -15,7 +16,6 @@ function containsFutureKeyword(value) {
 
   return [
     'win total',
-    'wins',
     'season wins',
     'regular season wins',
     'championship',
@@ -26,7 +26,28 @@ function containsFutureKeyword(value) {
     'conference champion',
     'conference championship',
     'semifinal',
-    'final'
+    'outright',
+    'future',
+    'futures'
+  ].some(keyword => text.includes(keyword));
+}
+
+function containsLeagueDiscoveryKeyword(value) {
+  const text = String(value || '').toLowerCase();
+
+  return [
+    'college',
+    'ncaa',
+    'ncaaf',
+    'future',
+    'futures',
+    'outright',
+    'champion',
+    'championship',
+    'playoff',
+    'cfp',
+    'conference',
+    'bowl'
   ].some(keyword => text.includes(keyword));
 }
 
@@ -42,6 +63,18 @@ function sanitizeEvent(event) {
     sport: event?.sport ?? null,
     rawKeys: event && typeof event === 'object'
       ? Object.keys(event)
+      : []
+  };
+}
+
+function sanitizeLeague(league) {
+  return {
+    id: league?.id ?? null,
+    name: league?.name ?? league?.title ?? null,
+    slug: league?.slug ?? league?.key ?? null,
+    sport: league?.sport ?? null,
+    rawKeys: league && typeof league === 'object'
+      ? Object.keys(league)
       : []
   };
 }
@@ -102,8 +135,7 @@ export async function GET() {
       };
     }
 
-    // Call 1:
-    // Inspect the normal NCAAF event pool and its object structure.
+    // Call 1: normal NCAAF event pool.
     const pendingUrl =
       `${BASE}/events` +
       `?sport=american-football` +
@@ -132,8 +164,6 @@ export async function GET() {
 
     const pendingEvents = list(pendingResult.body);
 
-    // Search all returned event metadata for anything that looks
-    // season-long/futures-related.
     const keywordMatches = pendingEvents
       .filter(event => {
         try {
@@ -149,7 +179,6 @@ export async function GET() {
       .slice(0, 15)
       .map(sanitizeEvent);
 
-    // Collect a safe summary of all top-level keys we see.
     const eventKeys = [
       ...new Set(
         pendingEvents.flatMap(event =>
@@ -160,22 +189,80 @@ export async function GET() {
       )
     ].sort();
 
+    // Call 2: discover all American-football leagues.
+    const leaguesUrl =
+      `${BASE}/leagues` +
+      `?sport=american-football` +
+      `&all=true` +
+      `&apiKey=${encodeURIComponent(key)}`;
+
+    const leaguesResult = await fetchJson(
+      'american_football_all_leagues',
+      leaguesUrl
+    );
+
+    const allLeagues = leaguesResult.response.ok
+      ? list(leaguesResult.body)
+      : [];
+
+    const leagueCandidates = allLeagues
+      .filter(league => {
+        try {
+          return containsLeagueDiscoveryKeyword(
+            JSON.stringify(league)
+          );
+        } catch {
+          return false;
+        }
+      })
+      .map(sanitizeLeague)
+      .slice(0, 100);
+
+    const leagueKeys = [
+      ...new Set(
+        allLeagues.flatMap(league =>
+          league && typeof league === 'object'
+            ? Object.keys(league)
+            : []
+        )
+      )
+    ].sort();
+
     return NextResponse.json({
       ok: true,
-      mode: 'ODDS_API_NCAAF_FUTURES_DIAGNOSTIC',
+      mode: 'ODDS_API_NCAAF_FUTURES_DIAGNOSTIC_V2',
       readOnly: true,
       callsUsed,
-      totalPendingEvents: pendingEvents.length,
-      futuresKeywordMatches: keywordMatches.length,
-      eventKeys,
-      sampleEvents,
-      keywordMatches,
+
+      eventDiscovery: {
+        totalPendingEvents: pendingEvents.length,
+        futuresKeywordMatches: keywordMatches.length,
+        eventKeys,
+        sampleEvents,
+        keywordMatches
+      },
+
+      leagueDiscovery: {
+        requestOk: leaguesResult.response.ok,
+        status: leaguesResult.response.status,
+        totalLeagues: allLeagues.length,
+        candidateCount: leagueCandidates.length,
+        leagueKeys,
+        candidates: leagueCandidates,
+        providerResponseIfFailed: leaguesResult.response.ok
+          ? null
+          : leaguesResult.body
+      },
+
       requests,
+
       notes: [
         'No Supabase writes were performed.',
         'ODDS_API_KEY is never returned.',
-        'This first diagnostic intentionally uses only one provider request.',
-        'If season-long markets are not visible here, we can do a second targeted endpoint test afterward.'
+        'This diagnostic uses two provider requests total.',
+        'The first call checks normal NCAAF events.',
+        'The second call discovers American-football leagues.',
+        'No candidate league odds are requested yet.'
       ]
     });
   } catch (error) {
