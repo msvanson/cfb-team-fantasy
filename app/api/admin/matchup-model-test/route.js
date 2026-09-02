@@ -108,8 +108,8 @@ export async function GET(req) {
       const { data, error } = await supabase
         .from('weekly_game_odds')
         .select(
-          'cfbd_game_id,closing_home_win_probability,closing_away_win_probability,home_win_probability,away_win_probability,projection_source,details'
-        )
+  'cfbd_game_id,closing_home_win_probability,closing_away_win_probability,closing_source,home_win_probability,away_win_probability,projection_source,details'
+)
         .in('cfbd_game_id', gameIds);
 
       if (error) throw error;
