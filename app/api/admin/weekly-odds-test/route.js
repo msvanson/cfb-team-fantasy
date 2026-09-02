@@ -372,24 +372,28 @@ export async function GET(req){
     const {data:existing,error:ee}=await supabase
       .from('weekly_game_odds')
       .select(`
-        cfbd_game_id,
-        odds_api_event_id,
-        home_win_probability,
-        away_win_probability,
-        projection_source,
-        books_used,
-        draftkings_home_decimal,
-        draftkings_away_decimal,
-        fanduel_home_decimal,
-        fanduel_away_decimal,
-        odds_updated_at,
-        closing_home_win_probability,
-        closing_away_win_probability,
-        closing_odds_updated_at,
-        closing_fetched_at,
-        closing_books_used,
-        closing_source
-      `)
+  cfbd_game_id,
+  odds_api_event_id,
+  home_win_probability,
+  away_win_probability,
+  projection_source,
+  books_used,
+  draftkings_home_decimal,
+  draftkings_away_decimal,
+  fanduel_home_decimal,
+  fanduel_away_decimal,
+  odds_updated_at,
+  home_spread,
+  spread_updated_at,
+  closing_home_win_probability,
+  closing_away_win_probability,
+  closing_odds_updated_at,
+  closing_fetched_at,
+  closing_books_used,
+  closing_source,
+  closing_home_spread,
+  closing_spread_updated_at
+`)
       .eq('season_id',1)
       .in('cfbd_game_id',relevantGameIds);
 
@@ -498,8 +502,13 @@ export async function GET(req){
       let books=0;
 
       let dk=null;
-      let fd=null;
-      let updated=null;
+let fd=null;
+let updated=null;
+
+let dkSpread=null;
+let fdSpread=null;
+let homeSpread=null;
+let spreadUpdated=null;
 
       let freshMarket=false;
       let cachedMarket=false;
@@ -523,6 +532,27 @@ export async function GET(req){
           fd=ml(
             ob?.bookmakers?.FanDuel
           );
+
+          dkSpread=spread(
+  ob?.bookmakers?.DraftKings
+);
+
+fdSpread=spread(
+  ob?.bookmakers?.FanDuel
+);
+
+homeSpread=consensusSpread(
+  dkSpread,
+  fdSpread
+);
+
+spreadUpdated=[
+  dkSpread?.updatedAt,
+  fdSpread?.updatedAt
+]
+  .filter(Boolean)
+  .sort()
+  .pop()||null;
 
           const probs=[
             fair(dk?.home,dk?.away),
@@ -681,6 +711,20 @@ export async function GET(req){
             ?.closing_source
             ??null;
 
+      const closingHomeSpread=
+  homeSpread!=null
+    ?homeSpread
+    :previous
+      ?.closing_home_spread
+      ??null;
+
+const closingSpreadUpdated=
+  homeSpread!=null
+    ?spreadUpdated
+    :previous
+      ?.closing_spread_updated_at
+      ??null;
+
       rows.push({
 
         season_id:1,
@@ -734,6 +778,12 @@ export async function GET(req){
         odds_updated_at:updated,
         fetched_at:nowIso,
 
+        home_spread:
+  homeSpread,
+
+spread_updated_at:
+  spreadUpdated,
+
         /*
          * FROZEN CLOSING LINE STORAGE
          */
@@ -742,6 +792,12 @@ export async function GET(req){
 
         closing_away_win_probability:
           closingAway,
+
+        closing_home_spread:
+  closingHomeSpread,
+
+closing_spread_updated_at:
+  closingSpreadUpdated,
 
         closing_odds_updated_at:
           closingUpdated,
