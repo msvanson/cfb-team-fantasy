@@ -238,6 +238,8 @@ else if (
 
         completed: game.completed === true,
 
+        spread,
+
         model: {
           ok: model.ok,
           homePct: pct(model.homeWinProbability),
