@@ -700,6 +700,34 @@ spreadUpdated=[
 
         cachedMarket=true;
       }
+      if(!sameOwner&&!freshMarket&&!cachedMarket){
+
+  const homeRatings=ratingByTeam.get(
+    String(g.home_team_id)
+  );
+
+  const awayRatings=ratingByTeam.get(
+    String(g.away_team_id)
+  );
+
+  const modelResult=
+    calculateMatchupProbability({
+      homeRatings,
+      awayRatings,
+      context:modelContext,
+      neutralSite:g.neutral_site===true,
+    });
+
+  const chosen=
+    choosePregameProbability({
+      spread:homeSpread,
+      modelResult,
+    });
+
+  hp=chosen.homeProbability;
+  ap=chosen.awayProbability;
+  source=chosen.source;
+}
 
       if(sameOwner){
 
