@@ -2,7 +2,11 @@ import {NextResponse} from 'next/server';
 import {isAdminAuthenticated} from '../../../../lib/admin-auth';
 import {createClient} from '@supabase/supabase-js';
 import {currentFantasyWeek} from '../../../../lib/fantasy-weeks';
-
+import {
+  buildMatchupModelContext,
+  calculateMatchupProbability,
+  choosePregameProbability,
+} from '../../../../lib/matchup-model';
 const BASE='https://api.odds-api.io/v3';
 const BOOKMAKERS='DraftKings,FanDuel';
 const MULTI_BATCH_SIZE=10;
@@ -303,7 +307,7 @@ export async function GET(req){
     const {data:games,error:ge}=await supabase
       .from('games')
       .select(
-        'cfbd_game_id,start_time,home_team_id,away_team_id,completed'
+        'cfbd_game_id,week,start_time,home_team_id,away_team_id,completed,neutral_site'
       )
       .gte('start_time',fantasyWeek.start)
       .lt('start_time',fantasyWeek.end)
