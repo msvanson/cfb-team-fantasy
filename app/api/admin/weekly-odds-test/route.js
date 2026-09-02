@@ -120,6 +120,64 @@ function ml(book){
   const m=(book||[]).find(x=>x.name==='ML');
   return m?.odds?.[0]||null;
 }
+function spread(book){
+  const market=(book||[]).find(
+    x=>x.name==='Spread'
+  );
+
+  if(!market?.odds?.length){
+    return null;
+  }
+
+  const candidates=market.odds
+    .map(line=>({
+      homeSpread:
+        line?.hdp==null
+          ?null
+          :Number(line.hdp),
+      updatedAt:
+        line?.updatedAt||
+        market?.updatedAt||
+        null
+    }))
+    .filter(
+      line=>Number.isFinite(line.homeSpread)
+    );
+
+  if(!candidates.length){
+    return null;
+  }
+
+  /*
+   * Prefer the line closest to pick'em.
+   *
+   * Odds-API can occasionally expose alternate
+   * handicaps. This prevents an extreme alternate
+   * line from accidentally becoming our main spread.
+   */
+  candidates.sort(
+    (a,b)=>
+      Math.abs(a.homeSpread)-
+      Math.abs(b.homeSpread)
+  );
+
+  return candidates[0];
+}
+
+function consensusSpread(...lines){
+  const valid=lines
+    .map(line=>line?.homeSpread)
+    .filter(Number.isFinite);
+
+  if(!valid.length){
+    return null;
+  }
+
+  return (
+    valid.reduce((sum,n)=>sum+n,0)/
+    valid.length
+  );
+}
 
 function fair(home,away){
   home=Number(home);
