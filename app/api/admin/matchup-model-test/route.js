@@ -108,7 +108,7 @@ export async function GET(req) {
       const { data, error } = await supabase
         .from('weekly_game_odds')
         .select(
-  'cfbd_game_id,closing_home_win_probability,closing_away_win_probability,closing_source,home_win_probability,away_win_probability,projection_source,details'
+  'cfbd_game_id,closing_home_win_probability,closing_away_win_probability,closing_source,closing_home_spread,closing_spread_updated_at,home_win_probability,away_win_probability,projection_source,home_spread,spread_updated_at,details'
 )
         .in('cfbd_game_id', gameIds);
 
@@ -199,9 +199,12 @@ else if (
   marketSource = gameOdds.projection_source;
 }
 
-      // Spread support will be connected once the current
-      // Odds API details structure is confirmed.
-      const spread = null;
+      const spread =
+  gameOdds?.closing_home_spread != null
+    ? Number(gameOdds.closing_home_spread)
+    : gameOdds?.home_spread != null
+      ? Number(gameOdds.home_spread)
+      : null;
 
       const chosen = choosePregameProbability({
         marketHomeProbability: marketHome,
