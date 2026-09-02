@@ -155,15 +155,49 @@ export async function GET(req) {
         String(game.cfbd_game_id)
       );
 
-      const marketHome =
-        gameOdds?.closing_home_win_probability ??
-        gameOdds?.home_win_probability ??
-        null;
+      const closingIsMarket =
+  String(gameOdds?.closing_source || '').startsWith('market_');
 
-      const marketAway =
-        gameOdds?.closing_away_win_probability ??
-        gameOdds?.away_win_probability ??
-        null;
+const currentIsMarket =
+  String(gameOdds?.projection_source || '').startsWith('market_');
+
+let marketHome = null;
+let marketAway = null;
+let marketSource = null;
+
+// Prefer the frozen closing market whenever we actually have one.
+if (
+  closingIsMarket &&
+  gameOdds?.closing_home_win_probability != null &&
+  gameOdds?.closing_away_win_probability != null
+) {
+  marketHome = Number(
+    gameOdds.closing_home_win_probability
+  );
+
+  marketAway = Number(
+    gameOdds.closing_away_win_probability
+  );
+
+  marketSource = gameOdds.closing_source;
+}
+
+// Otherwise use the current quote only if it really came from a market.
+else if (
+  currentIsMarket &&
+  gameOdds?.home_win_probability != null &&
+  gameOdds?.away_win_probability != null
+) {
+  marketHome = Number(
+    gameOdds.home_win_probability
+  );
+
+  marketAway = Number(
+    gameOdds.away_win_probability
+  );
+
+  marketSource = gameOdds.projection_source;
+}
 
       // Spread support will be connected once the current
       // Odds API details structure is confirmed.
@@ -216,8 +250,7 @@ export async function GET(req) {
         market: {
           homePct: pct(marketHome),
           awayPct: pct(marketAway),
-          source:
-            gameOdds?.projection_source ?? null,
+          source: marketSource,
         },
 
         comparison: {
