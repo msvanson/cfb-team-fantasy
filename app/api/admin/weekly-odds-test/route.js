@@ -386,6 +386,34 @@ export async function GET(req){
         reason:'No upcoming owned-team games'
       });
     }
+    const modelWeek=Math.min(
+  ...relevant
+    .map(g=>Number(g.week))
+    .filter(Number.isFinite)
+);
+
+const ratingsThroughWeek=
+  Math.max(0,modelWeek-1);
+
+const {data:ratings,error:re}=await supabase
+  .from('team_rating_snapshots')
+  .select(
+    'team_id,sp_rating,fpi,elo,through_week,season_type'
+  )
+  .eq('season_id',1)
+  .eq('through_week',ratingsThroughWeek)
+  .eq('season_type','regular');
+
+if(re)throw re;
+
+const modelContext=
+  buildMatchupModelContext(ratings||[]);
+
+const ratingByTeam=new Map(
+  (ratings||[]).map(
+    row=>[String(row.team_id),row]
+  )
+);
 
     /*
      * Read our previous cache FIRST.
