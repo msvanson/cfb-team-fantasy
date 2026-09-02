@@ -135,6 +135,74 @@ function spread(book){
         line?.hdp==null
           ?null
           :Number(line.hdp),
+
+      homePrice:
+        line?.home==null
+          ?null
+          :Number(line.home),
+
+      awayPrice:
+        line?.away==null
+          ?null
+          :Number(line.away),
+
+      updatedAt:
+        line?.updatedAt||
+        market?.updatedAt||
+        null
+    }))
+    .filter(line=>
+      Number.isFinite(line.homeSpread)&&
+      Number.isFinite(line.homePrice)&&
+      line.homePrice>1&&
+      Number.isFinite(line.awayPrice)&&
+      line.awayPrice>1
+    );
+
+  if(!candidates.length){
+    return null;
+  }
+
+  /*
+   * A sportsbook may return multiple spread lines.
+   * The main line should generally have the most
+   * balanced prices on the two sides.
+   */
+  candidates.sort((a,b)=>{
+    const aBalance=
+      Math.abs(
+        (1/a.homePrice)-
+        (1/a.awayPrice)
+      );
+
+    const bBalance=
+      Math.abs(
+        (1/b.homePrice)-
+        (1/b.awayPrice)
+      );
+
+    return aBalance-bBalance;
+  });
+
+  return{
+    homeSpread:
+      candidates[0].homeSpread,
+
+    updatedAt:
+      candidates[0].updatedAt
+  };
+}
+
+  if(!market?.odds?.length){
+    return null;
+  }
+
+  const candidates=market.odds
+    .map(line=>({
+      homeSpread:
+        line?.hdp==null
+          ?null
+          :Number(line.hdp),
       updatedAt:
         line?.updatedAt||
         market?.updatedAt||
