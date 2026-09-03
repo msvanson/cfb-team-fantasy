@@ -53,6 +53,57 @@ export function AdminPanel({teams}){
   const [accountMsg,setAccountMsg]=useState('');
   async function loadAccounts(){const r=await fetch('/api/admin/accounts',{cache:'no-store'});const j=await r.json();setAccountData(j);if(!r.ok)setAccountMsg(j.error||'Could not load accounts');}
   async function assignAccount(user_id,owner_id,role){setAccountMsg('Saving…');const r=await fetch('/api/admin/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id,owner_id,role})});const j=await r.json();setAccountMsg(j.ok?'Saved.':j.error||'Save failed');if(j.ok)loadAccounts();}
+    const [wheelReviews,setWheelReviews]=useState(null);
+  const [wheelReviewMsg,setWheelReviewMsg]=useState('');
+
+  async function loadWheelReviews(){
+    setWheelReviewMsg('Loading…');
+
+    const response=await fetch(
+      '/api/admin/wheel',
+      {cache:'no-store'}
+    );
+
+    const result=await response.json();
+
+    setWheelReviews(result);
+    setWheelReviewMsg(
+      response.ok
+        ?''
+        :result.error||'Could not load wheel items'
+    );
+  }
+
+  async function reviewWheelItem(id,action){
+    setWheelReviewMsg(
+      action==='approve'
+        ?'Approving…'
+        :'Rejecting…'
+    );
+
+    const response=await fetch('/api/admin/wheel',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({
+        id,
+        action
+      })
+    });
+
+    const result=await response.json();
+
+    setWheelReviewMsg(
+      response.ok
+        ?'Saved.'
+        :result.error||'Review failed'
+    );
+
+    if(response.ok){
+      await loadWheelReviews();
+    }
+  }
 
   const [msg,setMsg]=useState('');
   const [qa,setQa]=useState(null);
@@ -127,6 +178,76 @@ export function AdminPanel({teams}){
   }
 
   return <div>
+        <div className="sectionTitle">
+      <h2>Wheel Approvals</h2>
+      <span className="muted">
+        Review items before they enter the Saturday wheel
+      </span>
+    </div>
+
+    <div className="card adminWheel">
+      <button
+        className="button"
+        onClick={loadWheelReviews}
+      >
+        Load Wheel Items
+      </button>
+
+      {wheelReviewMsg?(
+        <div className="notice">
+          {wheelReviewMsg}
+        </div>
+      ):null}
+
+      {wheelReviews?.entries?.length
+        ?wheelReviews.entries.map(item=>(
+          <div
+            className="adminWheelRow"
+            key={item.id}
+          >
+            <div>
+              <b>{item.item_text}</b>
+              <small>
+                {item.owners?.name||
+                  item.user_profiles?.username||
+                  'League member'}{' '}
+                · {item.status}
+              </small>
+            </div>
+
+            {item.status==='pending'?(
+              <span>
+                <button
+                  className="button"
+                  onClick={()=>
+                    reviewWheelItem(item.id,'approve')
+                  }
+                >
+                  Approve
+                </button>
+
+                <button
+                  className="button adminWheelReject"
+                  onClick={()=>
+                    reviewWheelItem(item.id,'reject')
+                  }
+                >
+                  Reject
+                </button>
+              </span>
+            ):(
+              <strong>On wheel</strong>
+            )}
+          </div>
+        ))
+        :wheelReviews?.entries
+          ?(
+            <div className="muted adminWheelEmpty">
+              No pending or approved items.
+            </div>
+          )
+          :null}
+    </div>
     <div className="sectionTitle"><h2>Ownership-Aware Scoring</h2><span className="muted">Safety diagnostic</span></div>
     <div className="card">
       <div className="qaTop"><div><b>Verify scoring ownership boundaries</b><div className="muted">Games are credited to whoever owned the school at kickoff. This does not change current standings yet.</div></div><button className="button" onClick={checkOwnershipScoring}>Check Ownership Scoring</button></div>
