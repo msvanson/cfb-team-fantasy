@@ -186,3 +186,302 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}body{overflow-x:hidden
 
 .ruleCopy ol{margin:8px 0 4px;padding-left:22px}.ruleCopy li{padding:4px 0;font-size:10px}.ruleCopy p{line-height:1.55}
 @media(max-width:640px){.ruleCopy li{font-size:9px}}
+
+/* Weekly wheel */
+
+.wheelHero {
+  margin-top: 12px;
+}
+
+.wheelCard {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  overflow: hidden;
+}
+
+.wheelSchedule {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  font-size: 11px;
+}
+
+.wheelSchedule span {
+  color: var(--muted);
+}
+
+.wheelStage {
+  position: relative;
+  width: min(330px, 78vw);
+  aspect-ratio: 1;
+  padding: 10px;
+}
+
+.wheelPointer {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 13px solid transparent;
+  border-right: 13px solid transparent;
+  border-top: 26px solid #f8fafc;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,.45));
+}
+
+.wheelDisc {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 8px solid #e2e8f0;
+  box-shadow:
+    0 12px 32px rgba(0,0,0,.32),
+    inset 0 0 0 3px rgba(15,23,42,.32);
+  display: grid;
+  place-items: center;
+  transform: rotate(0);
+}
+
+.wheelDisc.isSpinning {
+  animation: wheelSpin 5.2s cubic-bezier(.12,.68,.12,1) forwards;
+}
+
+.wheelHub {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: #0f172a;
+  border: 5px solid #f8fafc;
+  display: grid;
+  place-items: center;
+  font-weight: 900;
+  font-size: 20px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.4);
+}
+
+@keyframes wheelSpin {
+  to {
+    transform: rotate(var(--wheel-final));
+  }
+}
+
+.wheelReveal,
+.wheelWinner {
+  text-align: center;
+  display: grid;
+  gap: 4px;
+}
+
+.wheelReveal span,
+.wheelWinner span,
+.wheelWinner small {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.wheelWinner h2 {
+  margin: 2px 0;
+  font-size: 24px;
+}
+
+.wheelApprovedList {
+  display: grid;
+  gap: 7px;
+}
+
+.wheelApprovedList > div {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  gap: 8px;
+  align-items: center;
+  padding: 7px 0;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+
+.wheelApprovedList > div:last-child {
+  border-bottom: 0;
+}
+
+.wheelApprovedList > div > b {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #1e293b;
+  font-size: 10px;
+}
+
+.wheelApprovedList > div > span {
+  font-size: 11px;
+}
+
+.wheelSubmit {
+  display: grid;
+  gap: 10px;
+}
+
+.wheelSubmit textarea {
+  min-height: 88px;
+  resize: vertical;
+  background: #111827;
+  color: inherit;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 9px;
+  padding: 11px;
+}
+
+.wheelSubmit > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+
+.wheelSubmissionList,
+.wheelHistory {
+  display: grid;
+  gap: 7px;
+}
+
+.wheelSubmission {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.wheelSubmission > span {
+  font-size: 11px;
+}
+
+.wheelStatus {
+  font-size: 8px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.wheelStatus.pending {
+  color: #fde68a;
+}
+
+.wheelStatus.approved {
+  color: #86efac;
+}
+
+.wheelStatus.rejected {
+  color: #fca5a5;
+}
+
+.wheelStatus.selected {
+  color: #93c5fd;
+}
+
+.wheelHistory {
+  grid-template-columns:
+    repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.wheelHistory > .card {
+  display: grid;
+  gap: 4px;
+}
+
+.wheelHistory small {
+  font-size: 8px;
+  color: var(--muted);
+}
+
+.adminWheel {
+  display: grid;
+  gap: 8px;
+}
+
+.adminWheel > .button {
+  justify-self: start;
+}
+
+.adminWheelRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 9px 0;
+  border-top: 1px solid rgba(255,255,255,.08);
+}
+
+.adminWheelRow > div {
+  display: grid;
+  gap: 3px;
+}
+
+.adminWheelRow small {
+  font-size: 9px;
+  color: var(--muted);
+}
+
+.adminWheelRow > span {
+  display: flex;
+  gap: 6px;
+}
+
+.adminWheelRow > strong {
+  font-size: 9px;
+  color: #86efac;
+}
+
+.adminWheelReject {
+  background: #7f1d1d;
+}
+
+.adminWheelEmpty {
+  padding-top: 8px;
+}
+
+@media (max-width: 640px) {
+  .wheelStage {
+    width: min(290px, 82vw);
+  }
+
+  .wheelDisc {
+    border-width: 6px;
+  }
+
+  .wheelWinner h2 {
+    font-size: 21px;
+  }
+
+  .wheelSchedule {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .wheelSubmit > div {
+    align-items: flex-end;
+  }
+
+  .adminWheelRow {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .adminWheelRow > span {
+    width: 100%;
+  }
+
+  .adminWheelRow > span .button {
+    flex: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wheelDisc.isSpinning {
+    animation-duration: .2s;
+  }
+}
