@@ -719,10 +719,12 @@ spreadUpdated=[
     });
 
   const chosen=
-    choosePregameProbability({
-      spread:homeSpread,
-      modelResult,
-    });
+  choosePregameProbability({
+    spread:homeSpread,
+    modelResult,
+    homeIsFbs:Boolean(homeRatings),
+    awayIsFbs:Boolean(awayRatings),
+  });
 
   hp=chosen.homeWinProbability;
 ap=chosen.awayWinProbability;
