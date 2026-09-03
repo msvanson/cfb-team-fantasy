@@ -724,8 +724,8 @@ spreadUpdated=[
       modelResult,
     });
 
-  hp=chosen.homeProbability;
-  ap=chosen.awayProbability;
+  hp=chosen.homeWinProbability;
+ap=chosen.awayWinProbability;
   source=chosen.source;
 }
 
