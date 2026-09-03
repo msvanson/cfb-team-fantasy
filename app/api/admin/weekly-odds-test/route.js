@@ -968,12 +968,40 @@ closing_spread_updated_at:
               'market_cached'
         ).length,
 
-      marketGames:
+            marketGames:
         rows.filter(
           x=>
             isMarketSource(
               x.projection_source
             )
+        ).length,
+
+      spread20Games:
+        rows.filter(
+          x=>
+            x.projection_source===
+              'spread_20_plus'
+        ).length,
+
+      matchupModelGames:
+        rows.filter(
+          x=>
+            x.projection_source===
+              'matchup_model_v1'
+        ).length,
+
+      fbsFcsGames:
+        rows.filter(
+          x=>
+            x.projection_source===
+              'fbs_fcs_fallback'
+        ).length,
+
+      fallbackGames:
+        rows.filter(
+          x=>
+            x.projection_source===
+              'emergency_50_50'
         ).length,
 
       fallbackGames:
