@@ -2,7 +2,11 @@ import {NextResponse} from 'next/server';
 import {isAdminAuthenticated} from '../../../../lib/admin-auth';
 import {createClient} from '@supabase/supabase-js';
 import {currentFantasyWeek} from '../../../../lib/fantasy-weeks';
-
+import {
+  buildMatchupModelContext,
+  calculateMatchupProbability,
+  choosePregameProbability,
+} from '../../../../lib/matchup-model';
 const BASE='https://api.odds-api.io/v3';
 const BOOKMAKERS='DraftKings,FanDuel';
 const MULTI_BATCH_SIZE=10;
@@ -120,6 +124,89 @@ function ml(book){
   const m=(book||[]).find(x=>x.name==='ML');
   return m?.odds?.[0]||null;
 }
+function spread(book){
+  const market=(book||[]).find(
+    x=>x.name==='Spread'
+  );
+
+  if(!market?.odds?.length){
+    return null;
+  }
+
+  const candidates=market.odds
+    .map(line=>({
+      homeSpread:
+        line?.hdp==null
+          ?null
+          :Number(line.hdp),
+
+      homePrice:
+        line?.home==null
+          ?null
+          :Number(line.home),
+
+      awayPrice:
+        line?.away==null
+          ?null
+          :Number(line.away),
+
+      updatedAt:
+        line?.updatedAt||
+        market?.updatedAt||
+        null
+    }))
+    .filter(line=>
+      Number.isFinite(line.homeSpread)&&
+      Number.isFinite(line.homePrice)&&
+      line.homePrice>1&&
+      Number.isFinite(line.awayPrice)&&
+      line.awayPrice>1
+    );
+
+  if(!candidates.length){
+    return null;
+  }
+
+  candidates.sort((a,b)=>{
+    const aBalance=
+      Math.abs(
+        (1/a.homePrice)-
+        (1/a.awayPrice)
+      );
+
+    const bBalance=
+      Math.abs(
+        (1/b.homePrice)-
+        (1/b.awayPrice)
+      );
+
+    return aBalance-bBalance;
+  });
+
+  return{
+    homeSpread:
+      candidates[0].homeSpread,
+
+    updatedAt:
+      candidates[0].updatedAt
+  };
+}
+
+  
+function consensusSpread(...lines){
+  const valid=lines
+    .map(line=>line?.homeSpread)
+    .filter(Number.isFinite);
+
+  if(!valid.length){
+    return null;
+  }
+
+  return (
+    valid.reduce((sum,n)=>sum+n,0)/
+    valid.length
+  );
+}
 
 function fair(home,away){
   home=Number(home);
@@ -220,7 +307,7 @@ export async function GET(req){
     const {data:games,error:ge}=await supabase
       .from('games')
       .select(
-        'cfbd_game_id,start_time,home_team_id,away_team_id,completed'
+        'cfbd_game_id,week,start_time,home_team_id,away_team_id,completed,neutral_site'
       )
       .gte('start_time',fantasyWeek.start)
       .lt('start_time',fantasyWeek.end)
@@ -299,6 +386,34 @@ export async function GET(req){
         reason:'No upcoming owned-team games'
       });
     }
+    const modelWeek=Math.min(
+  ...relevant
+    .map(g=>Number(g.week))
+    .filter(Number.isFinite)
+);
+
+const ratingsThroughWeek=
+  Math.max(0,modelWeek-1);
+
+const {data:ratings,error:re}=await supabase
+  .from('team_rating_snapshots')
+  .select(
+    'team_id,sp_rating,fpi,elo,through_week,season_type'
+  )
+  .eq('season_id',1)
+  .eq('through_week',ratingsThroughWeek)
+  .eq('season_type','regular');
+
+if(re)throw re;
+
+const modelContext=
+  buildMatchupModelContext(ratings||[]);
+
+const ratingByTeam=new Map(
+  (ratings||[]).map(
+    row=>[String(row.team_id),row]
+  )
+);
 
     /*
      * Read our previous cache FIRST.
@@ -314,24 +429,28 @@ export async function GET(req){
     const {data:existing,error:ee}=await supabase
       .from('weekly_game_odds')
       .select(`
-        cfbd_game_id,
-        odds_api_event_id,
-        home_win_probability,
-        away_win_probability,
-        projection_source,
-        books_used,
-        draftkings_home_decimal,
-        draftkings_away_decimal,
-        fanduel_home_decimal,
-        fanduel_away_decimal,
-        odds_updated_at,
-        closing_home_win_probability,
-        closing_away_win_probability,
-        closing_odds_updated_at,
-        closing_fetched_at,
-        closing_books_used,
-        closing_source
-      `)
+  cfbd_game_id,
+  odds_api_event_id,
+  home_win_probability,
+  away_win_probability,
+  projection_source,
+  books_used,
+  draftkings_home_decimal,
+  draftkings_away_decimal,
+  fanduel_home_decimal,
+  fanduel_away_decimal,
+  odds_updated_at,
+  home_spread,
+  spread_updated_at,
+  closing_home_win_probability,
+  closing_away_win_probability,
+  closing_odds_updated_at,
+  closing_fetched_at,
+  closing_books_used,
+  closing_source,
+  closing_home_spread,
+  closing_spread_updated_at
+`)
       .eq('season_id',1)
       .in('cfbd_game_id',relevantGameIds);
 
@@ -440,8 +559,13 @@ export async function GET(req){
       let books=0;
 
       let dk=null;
-      let fd=null;
-      let updated=null;
+let fd=null;
+let updated=null;
+
+let dkSpread=null;
+let fdSpread=null;
+let homeSpread=null;
+let spreadUpdated=null;
 
       let freshMarket=false;
       let cachedMarket=false;
@@ -465,6 +589,27 @@ export async function GET(req){
           fd=ml(
             ob?.bookmakers?.FanDuel
           );
+
+          dkSpread=spread(
+  ob?.bookmakers?.DraftKings
+);
+
+fdSpread=spread(
+  ob?.bookmakers?.FanDuel
+);
+
+homeSpread=consensusSpread(
+  dkSpread,
+  fdSpread
+);
+
+spreadUpdated=[
+  dkSpread?.updatedAt,
+  fdSpread?.updatedAt
+]
+  .filter(Boolean)
+  .sort()
+  .pop()||null;
 
           const probs=[
             fair(dk?.home,dk?.away),
@@ -555,6 +700,36 @@ export async function GET(req){
 
         cachedMarket=true;
       }
+      if(!sameOwner&&!freshMarket&&!cachedMarket){
+
+  const homeRatings=ratingByTeam.get(
+    String(g.home_team_id)
+  );
+
+  const awayRatings=ratingByTeam.get(
+    String(g.away_team_id)
+  );
+
+  const modelResult=
+    calculateMatchupProbability({
+      homeRatings,
+      awayRatings,
+      context:modelContext,
+      neutralSite:g.neutral_site===true,
+    });
+
+  const chosen=
+  choosePregameProbability({
+    spread:homeSpread,
+    modelResult,
+    homeIsFbs:Boolean(homeRatings),
+    awayIsFbs:Boolean(awayRatings),
+  });
+
+  hp=chosen.homeWinProbability;
+ap=chosen.awayWinProbability;
+  source=chosen.source;
+}
 
       if(sameOwner){
 
@@ -623,6 +798,20 @@ export async function GET(req){
             ?.closing_source
             ??null;
 
+      const closingHomeSpread=
+  homeSpread!=null
+    ?homeSpread
+    :previous
+      ?.closing_home_spread
+      ??null;
+
+const closingSpreadUpdated=
+  homeSpread!=null
+    ?spreadUpdated
+    :previous
+      ?.closing_spread_updated_at
+      ??null;
+
       rows.push({
 
         season_id:1,
@@ -676,6 +865,12 @@ export async function GET(req){
         odds_updated_at:updated,
         fetched_at:nowIso,
 
+        home_spread:
+  homeSpread,
+
+spread_updated_at:
+  spreadUpdated,
+
         /*
          * FROZEN CLOSING LINE STORAGE
          */
@@ -684,6 +879,12 @@ export async function GET(req){
 
         closing_away_win_probability:
           closingAway,
+
+        closing_home_spread:
+  closingHomeSpread,
+
+closing_spread_updated_at:
+  closingSpreadUpdated,
 
         closing_odds_updated_at:
           closingUpdated,
@@ -767,7 +968,7 @@ export async function GET(req){
               'market_cached'
         ).length,
 
-      marketGames:
+            marketGames:
         rows.filter(
           x=>
             isMarketSource(
@@ -775,12 +976,35 @@ export async function GET(req){
             )
         ).length,
 
+      spread20Games:
+        rows.filter(
+          x=>
+            x.projection_source===
+              'spread_20_plus'
+        ).length,
+
+      matchupModelGames:
+        rows.filter(
+          x=>
+            x.projection_source===
+              'matchup_model_v1'
+        ).length,
+
+      fbsFcsGames:
+        rows.filter(
+          x=>
+            x.projection_source===
+              'fbs_fcs_fallback'
+        ).length,
+
       fallbackGames:
         rows.filter(
           x=>
             x.projection_source===
-              'fallback_50_50'
+              'emergency_50_50'
         ).length,
+
+    
 
       sameOwnerGames:
         rows.filter(

@@ -233,7 +233,7 @@ export function AdminPanel({teams}){
  <div className="qaTop"><div><b>Refresh weekly odds cache</b><div className="muted">Stores weekly win probabilities in Supabase. No market = 50/50. Same owner on both teams = guaranteed 1.000 point.</div></div><button className="button" onClick={testWeeklyOdds}>Refresh Weekly Odds Cache</button></div>
  {weeklyOddsTest&&<div className="qaList">
   <div className="qaRow"><span className={'qaBadge '+(weeklyOddsTest.ok?'pass':'fail')}>{weeklyOddsTest.ok?'PASS':'FAIL'}</span><div><b>Cache refresh</b><div className="muted">{weeklyOddsTest.rowsSaved??0} rows saved · {weeklyOddsTest.externalRequestsUsed??0} Odds-API calls</div></div></div>
-  <div className="qaRow"><span className="qaBadge pass">INFO</span><div><b>Projection sources</b><div className="muted">{weeklyOddsTest.marketGames??0} market · {weeklyOddsTest.fallbackGames??0} fallback 50/50 · {weeklyOddsTest.sameOwnerGames??0} same-owner guaranteed</div></div></div>
+    <div className="qaRow"><span className="qaBadge pass">INFO</span><div><b>Projection sources</b><div className="muted">{weeklyOddsTest.marketGames??0} Market · {weeklyOddsTest.spread20Games??0} Spread 20+ · {weeklyOddsTest.matchupModelGames??0} Matchup Model · {weeklyOddsTest.fbsFcsGames??0} FBS/FCS · {weeklyOddsTest.fallbackGames??0} Emergency 50/50</div></div></div>
   {weeklyOddsTest.ownerProjectedWinPoints&&<div className="card"><b>Projected win points by owner</b>{Object.entries(weeklyOddsTest.ownerProjectedWinPoints).sort((a,b)=>b[1]-a[1]).map(([n,p])=><div className="qaRow" key={n}><span><b>{n}</b></span><span>{Number(p).toFixed(3)}</span></div>)}</div>}
   {weeklyOddsTest.error&&<div className="notice">{weeklyOddsTest.error}</div>}
  </div>}
