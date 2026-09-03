@@ -1004,12 +1004,7 @@ closing_spread_updated_at:
               'emergency_50_50'
         ).length,
 
-      fallbackGames:
-        rows.filter(
-          x=>
-            x.projection_source===
-              'fallback_50_50'
-        ).length,
+    
 
       sameOwnerGames:
         rows.filter(
