@@ -54,12 +54,14 @@ export async function GET(req){
     }
   }
 
-  const drawQuery=s
+    const drawQuery=s
     .from('wheel_draws')
     .select(
-      'id,draw_key,week_label,selected_entry_id,selected_text,entry_snapshot,drawn_at'
+      'id,draw_key,week_label,selected_entry_id,selected_text,entry_snapshot,drawn_at,draw_type'
     )
-    .eq('season_id',1);
+    .eq('season_id',1)
+    .order('drawn_at',{ascending:false})
+    .limit(1);
 
   const [
     drawResult,
@@ -67,9 +69,7 @@ export async function GET(req){
     myResult,
     historyResult
   ]=await Promise.all([
-    timing.latestDrawKey
-      ?drawQuery.eq('draw_key',timing.latestDrawKey).maybeSingle()
-      :Promise.resolve({data:null,error:null}),
+        drawQuery.maybeSingle(),
 
     s
       .from('wheel_entries')
@@ -88,7 +88,7 @@ export async function GET(req){
 
     s
       .from('wheel_draws')
-      .select('id,draw_key,week_label,selected_text,drawn_at')
+      .select('id,draw_key,week_label,selected_text,drawn_at,draw_type')
       .eq('season_id',1)
       .order('drawn_at',{ascending:false})
       .limit(12)

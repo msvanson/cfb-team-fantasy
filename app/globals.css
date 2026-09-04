@@ -382,6 +382,10 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}body{overflow-x:hidden
   color: #93c5fd;
 }
 
+.wheelStatus.removed {
+  color: #fca5a5;
+}
+
 .wheelHistory {
   grid-template-columns:
     repeat(auto-fit, minmax(180px, 1fr));
@@ -404,6 +408,16 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}body{overflow-x:hidden
 
 .adminWheel > .button {
   justify-self: start;
+}
+
+.adminWheelControls {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.adminWheelForce {
+  background: #7c3aed;
 }
 
 .adminWheelRow {
@@ -431,6 +445,12 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}body{overflow-x:hidden
 }
 
 .adminWheelRow > strong {
+  font-size: 9px;
+  color: #86efac;
+}
+
+.adminWheelRow > span > strong {
+  align-self: center;
   font-size: 9px;
   color: #86efac;
 }

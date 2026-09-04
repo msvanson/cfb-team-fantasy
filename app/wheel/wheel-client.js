@@ -230,7 +230,7 @@ export default function WheelClient(){
           <div>
             <h2>Weekly Wheel</h2>
             <span className="muted">
-              One result, locked for everyone all week.
+                  Every draw is shared and saved for the league.
             </span>
           </div>
         </div>
@@ -266,7 +266,11 @@ export default function WheelClient(){
             >
               <small>{draw.week_label}</small>
               <h2>{draw.selected_text}</h2>
-              <span>Locked in for the week</span>
+                            <span>
+                {draw.draw_type==='manual'
+                  ?'Commissioner spin · saved to history'
+                  :'Locked in for the week'}
+              </span>
             </div>
           ):null}
 
