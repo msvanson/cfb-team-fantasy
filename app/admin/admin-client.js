@@ -237,13 +237,33 @@ export function AdminPanel({teams}){
       </span>
     </div>
 
-    <div className="card adminWheel">
-      <button
-        className="button"
-        onClick={loadWheelReviews}
-      >
-        Load Wheel Items
-      </button>
+        <div className="card adminWheel">
+      <div className="adminWheelControls">
+        <button
+          className="button"
+          onClick={loadWheelReviews}
+        >
+          Load Wheel Items
+        </button>
+
+        <button
+          className="button adminWheelForce"
+          onClick={forceWheelSpin}
+          disabled={
+            wheelSpinBusy||
+            !wheelReviews?.entries?.some(
+              item=>item.status==='approved'
+            )
+          }
+        >
+          {wheelSpinBusy?'Spinning…':'Force Spin'}
+        </button>
+      </div>
+
+      <small className="muted">
+        Forced spins are shown to everyone, remove their
+        winner, and do not affect Saturday’s scheduled spin.
+      </small>
 
       {wheelReviewMsg?(
         <div className="notice">
@@ -288,7 +308,18 @@ export function AdminPanel({teams}){
                 </button>
               </span>
             ):(
-              <strong>On wheel</strong>
+              <span>
+                <strong>On wheel</strong>
+
+                <button
+                  className="button adminWheelReject"
+                  onClick={()=>
+                    reviewWheelItem(item.id,'remove')
+                  }
+                >
+                  Remove
+                </button>
+              </span>
             )}
           </div>
         ))
