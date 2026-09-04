@@ -66,9 +66,40 @@ export async function POST(req){
   const id=Number(body?.id);
   const action=body?.action;
 
+  if(action==='force_spin'){
+    const {data,error}=await sb().rpc(
+      'force_wheel_spin',
+      {p_season_id:1}
+    );
+
+    if(error){
+      return NextResponse.json(
+        {ok:false,error:'Unable to force the wheel spin'},
+        {status:500}
+      );
+    }
+
+    if(!data?.drawn){
+      return NextResponse.json(
+        {
+          ok:false,
+          error:data?.reason==='no_approved_entries'
+            ?'There are no approved items on the wheel'
+            :'The wheel could not be spun'
+        },
+        {status:409}
+      );
+    }
+
+    return NextResponse.json({
+      ok:true,
+      draw:data
+    });
+  }
+
   if(
     !Number.isSafeInteger(id)||
-    !['approve','reject'].includes(action)
+    !['approve','reject','remove'].includes(action)
   ){
     return NextResponse.json(
       {ok:false,error:'Invalid review action'},
@@ -80,20 +111,32 @@ export async function POST(req){
     ?{
       status:'approved',
       approved_at:new Date().toISOString(),
-      rejected_at:null
+      rejected_at:null,
+      removed_at:null
     }
-    :{
-      status:'rejected',
-      rejected_at:new Date().toISOString(),
-      approved_at:null
-    };
+    :action==='reject'
+      ?{
+        status:'rejected',
+        rejected_at:new Date().toISOString(),
+        approved_at:null,
+        removed_at:null
+      }
+      :{
+        status:'removed',
+        removed_at:new Date().toISOString()
+      };
+
+  const expectedStatus=
+    action==='remove'
+      ?'approved'
+      :'pending';
 
   const {data,error}=await sb()
     .from('wheel_entries')
     .update(patch)
     .eq('id',id)
     .eq('season_id',1)
-    .eq('status','pending')
+    .eq('status',expectedStatus)
     .select('id,status')
     .maybeSingle();
 
@@ -106,7 +149,12 @@ export async function POST(req){
 
   if(!data){
     return NextResponse.json(
-      {ok:false,error:'That item is no longer pending'},
+      {
+        ok:false,
+        error:action==='remove'
+          ?'That item is no longer on the wheel'
+          :'That item is no longer pending'
+      },
       {status:409}
     );
   }
