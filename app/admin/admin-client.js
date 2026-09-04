@@ -53,8 +53,9 @@ export function AdminPanel({teams}){
   const [accountMsg,setAccountMsg]=useState('');
   async function loadAccounts(){const r=await fetch('/api/admin/accounts',{cache:'no-store'});const j=await r.json();setAccountData(j);if(!r.ok)setAccountMsg(j.error||'Could not load accounts');}
   async function assignAccount(user_id,owner_id,role){setAccountMsg('Saving…');const r=await fetch('/api/admin/accounts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id,owner_id,role})});const j=await r.json();setAccountMsg(j.ok?'Saved.':j.error||'Save failed');if(j.ok)loadAccounts();}
-    const [wheelReviews,setWheelReviews]=useState(null);
+  const [wheelReviews,setWheelReviews]=useState(null);
   const [wheelReviewMsg,setWheelReviewMsg]=useState('');
+  const [wheelSpinBusy,setWheelSpinBusy]=useState(false);
 
   async function loadWheelReviews(){
     setWheelReviewMsg('Loading…');
@@ -75,10 +76,21 @@ export function AdminPanel({teams}){
   }
 
   async function reviewWheelItem(id,action){
+    if(
+      action==='remove'&&
+      !window.confirm(
+        'Remove this item from the wheel? It will no longer be eligible for any spin.'
+      )
+    ){
+      return;
+    }
+
     setWheelReviewMsg(
       action==='approve'
         ?'Approving…'
-        :'Rejecting…'
+        :action==='remove'
+          ?'Removing…'
+          :'Rejecting…'
     );
 
     const response=await fetch('/api/admin/wheel',{
@@ -103,6 +115,46 @@ export function AdminPanel({teams}){
     if(response.ok){
       await loadWheelReviews();
     }
+  }
+
+  async function forceWheelSpin(){
+    const confirmed=window.confirm(
+      'Force a commissioner spin now? The result will be shown to everyone and the selected item will be permanently removed. Saturday’s scheduled spin will still happen.'
+    );
+
+    if(!confirmed){
+      return;
+    }
+
+    setWheelSpinBusy(true);
+    setWheelReviewMsg('Spinning the wheel…');
+
+    const response=await fetch('/api/admin/wheel',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json'
+      },
+      body:JSON.stringify({
+        action:'force_spin'
+      })
+    });
+
+    const result=await response.json();
+
+    setWheelSpinBusy(false);
+
+    if(!response.ok){
+      setWheelReviewMsg(
+        result.error||'The forced spin failed'
+      );
+      return;
+    }
+
+    await loadWheelReviews();
+
+    setWheelReviewMsg(
+      `Forced spin complete: ${result.draw.selectedText}`
+    );
   }
 
   const [msg,setMsg]=useState('');
