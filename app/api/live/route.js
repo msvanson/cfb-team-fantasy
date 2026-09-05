@@ -44,9 +44,10 @@ try {
   const from = fantasyWeek.start;
   const to = fantasyWeek.end;
 
-  const [
+    const [
     {data:games,error:gameError},
     {data:directory,error:dirError},
+    {data:scheduleTeams,error:scheduleTeamError},
     {data:owners,error:ownerError},
     {data:weeklyOdds,error:oddsError},
     {data:weeklyRows,error:weeklyError},
@@ -58,6 +59,8 @@ try {
     supabase.from('team_directory')
       .select('team_id,school,abbreviation,mascot,owner_id,owner_name,is_owned')
       .eq('season_id',1),
+    supabase.from('teams')
+      .select('id,school,abbreviation,mascot'),
     supabase.from('owners').select('id,name,draft_slot').eq('season_id',1).order('draft_slot'),
     supabase.from('weekly_game_odds')
       .select('cfbd_game_id,home_team_id,away_team_id,home_win_probability,away_win_probability,projection_source,books_used,odds_updated_at,fetched_at')
@@ -67,7 +70,7 @@ try {
     supabase.from('games').select('id',{count:'exact',head:true}).eq('season_id',1)
   ]);
 
-  if (gameError || dirError || ownerError || oddsError || weeklyError || countError) {
+  if (gameError || dirError || scheduleTeamError || ownerError || oddsError || weeklyError || countError) {
   return NextResponse.json(
     {
       ok: false,
@@ -78,7 +81,8 @@ try {
   );
 }
 
-  const byId=new Map((directory||[]).map(t=>[t.team_id,t]));
+  const byId=new Map((scheduleTeams||[]).map(t=>[t.id,{school:t.school,abbreviation:t.abbreviation,mascot:t.mascot,owner_id:null,owner_name:null,is_owned:false}]));
+  for(const t of directory||[])byId.set(t.team_id,t);
   const oddsByGame=new Map((weeklyOdds||[]).map(o=>[String(o.cfbd_game_id),o]));
 
   const decorated=(games||[]).map(g=>({
