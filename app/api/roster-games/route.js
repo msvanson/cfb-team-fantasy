@@ -37,16 +37,18 @@ try {
 
   const now=Date.now();
   const from=new Date(now-18*60*60*1000).toISOString();
-  const [
+    const [
     {data:directory,error:de},
+    {data:scheduleTeams,error:se},
     {data:games,error:ge},
     {data:odds,error:oe}
   ]=await Promise.all([
     supabase.from('team_directory').select('team_id,school,abbreviation,mascot,owner_id,owner_name,is_owned').eq('season_id',1),
+    supabase.from('teams').select('id,school,abbreviation,mascot'),
     supabase.from('games').select('id,cfbd_game_id,start_time,home_team_id,away_team_id,home_score,away_score,status,period,clock,completed,winner_team_id').eq('season_id',1).gte('start_time',from).order('start_time'),
     supabase.from('weekly_game_odds').select('cfbd_game_id,home_team_id,away_team_id,home_win_probability,away_win_probability,projection_source,books_used,odds_updated_at').eq('season_id',1)
   ]);
-  if (de || ge || oe) {
+  if (de || se || ge || oe) {
   return NextResponse.json(
     {
       ok: false,
@@ -57,7 +59,8 @@ try {
   );
 }
 
-  const tm=new Map((directory||[]).map(t=>[Number(t.team_id),t]));
+  const tm=new Map((scheduleTeams||[]).map(t=>[Number(t.id),{school:t.school,abbreviation:t.abbreviation,mascot:t.mascot}]));
+  for(const t of directory||[])tm.set(Number(t.team_id),t);
   const om=new Map((odds||[]).map(o=>[String(o.cfbd_game_id),o]));
   const owned=(directory||[]).filter(t=>t.is_owned);
   const byTeam={};
