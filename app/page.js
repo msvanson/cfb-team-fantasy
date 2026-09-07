@@ -51,10 +51,10 @@ export default async function Home(){
                   compact
                 />
                 {standing.rank_movement>0
-                  ?<span className="rankMove up" title={`Up ${standing.rank_movement} since Sunday`}>▲{standing.rank_movement}</span>
-                  :standing.rank_movement<0
-                    ?<span className="rankMove down" title={`Down ${Math.abs(standing.rank_movement)} since Sunday`}>▼{Math.abs(standing.rank_movement)}</span>
-                    :<span className="rankMove same" title="No change since Sunday">—</span>}
+  ?<span className="rankMove up" title={`Up ${standing.rank_movement} since Sunday`}>▲{standing.rank_movement}</span>
+  :standing.rank_movement<0
+    ?<span className="rankMove down" title={`Down ${Math.abs(standing.rank_movement)} since Sunday`}>▼{Math.abs(standing.rank_movement)}</span>
+    :null}
               </span></td>
               <td><b>{standing.fantasy_points}</b></td>
               <td>{projectionMap.has(Number(standing.owner_id))
