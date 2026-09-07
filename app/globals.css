@@ -1114,3 +1114,78 @@ body,
     font-size: 7.5px;
   }
 }
+
+/* Align roster identities within live game rows */
+.compactGameTeam {
+  grid-template-columns: minmax(0,1fr) 66px;
+}
+
+.compactTeamIdentity {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) 94px;
+  align-items: center;
+  gap: 7px;
+}
+
+.compactTeamIdentity > strong {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.compactTeamIdentity > strong .teamNameWithLogo {
+  max-width: 100%;
+}
+
+.gameOwnerIdentity {
+  width: 94px;
+  margin-left: 0;
+  padding-left: 6px;
+}
+
+.gameOwnerIdentity .ownerIdentityText b {
+  display: -webkit-box;
+  max-width: none;
+  overflow: hidden;
+  line-height: 1.05;
+  white-space: normal;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.compactTeamRight {
+  display: grid;
+  grid-template-columns: 38px 22px;
+  gap: 6px;
+  width: 66px;
+}
+
+.compactTeamRight .win-probability {
+  grid-column: 1;
+  text-align: center;
+}
+
+.compactTeamRight > b {
+  grid-column: 2;
+}
+
+@media(max-width:640px) {
+  .compactGameTeam {
+    grid-template-columns: minmax(0,1fr) 60px;
+  }
+
+  .compactTeamIdentity {
+    grid-template-columns: minmax(0,1fr) 84px;
+    gap: 5px;
+  }
+
+  .gameOwnerIdentity {
+    width: 84px;
+    padding-left: 4px;
+  }
+
+  .compactTeamRight {
+    grid-template-columns: 34px 20px;
+    gap: 6px;
+    width: 60px;
+  }
+}
