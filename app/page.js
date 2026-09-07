@@ -1,6 +1,92 @@
-import Link from 'next/link';import {Nav} from './nav';import {LeagueHeader} from './league-header';import {getStandings,getOwnerProjectionTotals,getWeeklySnapshots} from '../lib/data';import StandingsHistoryChart from './standings-history-chart';export const dynamic='force-dynamic';
-export default async function Home(){const [standings,ownerProj,snapshots]=await Promise.all([getStandings(),getOwnerProjectionTotals(),getWeeklySnapshots()]);const pm=new Map(ownerProj.map(x=>[Number(x.owner_id),x.projected_points]));return <main className="shell"><LeagueHeader/><Nav/>
-<section className="section standingsSection"><div className="sectionTitle"><h2>Standings</h2></div><div className="standingsTableWrap"><table className="table standingsCompact"><thead><tr><th>Rank</th><th>Owner</th><th>Pts</th><th>Proj</th><th>W-L</th><th>Pt Diff</th></tr></thead><tbody>{standings.map(s=><tr key={s.owner_id}><td className="standingRank"><b>{s.rank}</b></td><td><span className="standingOwner"><Link className="teamLink" href={`/owners/${s.owner_id}`}><b>{s.owner_name}</b></Link>{s.rank_movement>0?<span className="rankMove up" title={`Up ${s.rank_movement} since Sunday`}>▲{s.rank_movement}</span>:s.rank_movement<0?<span className="rankMove down" title={`Down ${Math.abs(s.rank_movement)} since Sunday`}>▼{Math.abs(s.rank_movement)}</span>:<span className="rankMove same" title="No change since Sunday">—</span>}</span></td><td><b>{s.fantasy_points}</b></td><td>{pm.has(Number(s.owner_id))?Number(pm.get(Number(s.owner_id))).toFixed(1):'—'}</td><td>{s.wins??0}-{s.losses??0}</td><td>{(s.point_differential??0)>0?'+':''}{s.point_differential??0}</td></tr>)}</tbody></table></div></section>
-<section className="section"><div className="sectionTitle"><h2>Standings History</h2></div><StandingsHistoryChart snapshots={snapshots.map(x=>({...x,owner_name:standings.find(s=>Number(s.owner_id)===Number(x.owner_id))?.owner_name||'Owner'}))}/></section>
-<footer className="standingsNotes"><b>Notes:</b> Pts = fantasy points · Proj = projected final fantasy points · W-L = combined team wins-losses · Pt Diff = combined point differential. Projections use current betting-market inputs and update on the league projection refresh.</footer>
-</main>}
+import {Nav} from './nav';
+import {LeagueHeader} from './league-header';
+import {OwnerIdentity} from './owner-identity';
+import {
+  getOwners,
+  getOwnerProjectionTotals,
+  getStandings,
+  getWeeklySnapshots
+} from '../lib/data';
+import StandingsHistoryChart from './standings-history-chart';
+
+export const dynamic='force-dynamic';
+
+export default async function Home(){
+  const [standings,owners,ownerProj,snapshots]=await Promise.all([
+    getStandings(),
+    getOwners(),
+    getOwnerProjectionTotals(),
+    getWeeklySnapshots()
+  ]);
+  const ownerMap=new Map(owners.map(owner=>[Number(owner.id),owner]));
+  const projectionMap=new Map(
+    ownerProj.map(item=>[Number(item.owner_id),item.projected_points])
+  );
+
+  return <main className="shell">
+    <LeagueHeader/>
+    <Nav/>
+
+    <section className="section standingsSection">
+      <div className="sectionTitle"><h2>Standings</h2></div>
+      <div className="standingsTableWrap">
+        <table className="table standingsCompact">
+          <thead><tr>
+            <th>Rank</th>
+            <th>Roster</th>
+            <th>Pts</th>
+            <th>Proj</th>
+            <th>W-L</th>
+            <th>Pt Diff</th>
+          </tr></thead>
+          <tbody>{standings.map(standing=>{
+            const owner=ownerMap.get(Number(standing.owner_id))||standing;
+            return <tr key={standing.owner_id}>
+              <td className="standingRank"><b>{standing.rank}</b></td>
+              <td><span className="standingOwner">
+                <OwnerIdentity
+                  owner={owner}
+                  href={`/owners/${standing.owner_id}`}
+                  size="sm"
+                  compact
+                />
+                {standing.rank_movement>0
+                  ?<span className="rankMove up" title={`Up ${standing.rank_movement} since Sunday`}>▲{standing.rank_movement}</span>
+                  :standing.rank_movement<0
+                    ?<span className="rankMove down" title={`Down ${Math.abs(standing.rank_movement)} since Sunday`}>▼{Math.abs(standing.rank_movement)}</span>
+                    :<span className="rankMove same" title="No change since Sunday">—</span>}
+              </span></td>
+              <td><b>{standing.fantasy_points}</b></td>
+              <td>{projectionMap.has(Number(standing.owner_id))
+                ?Number(projectionMap.get(Number(standing.owner_id))).toFixed(1)
+                :'—'}</td>
+              <td>{standing.wins??0}-{standing.losses??0}</td>
+              <td>{(standing.point_differential??0)>0?'+':''}{standing.point_differential??0}</td>
+            </tr>;
+          })}</tbody>
+        </table>
+      </div>
+    </section>
+
+    <section className="section">
+      <div className="sectionTitle"><h2>Standings History</h2></div>
+      <StandingsHistoryChart snapshots={snapshots.map(snapshot=>{
+        const standing=standings.find(
+          item=>Number(item.owner_id)===Number(snapshot.owner_id)
+        );
+        const owner=ownerMap.get(Number(snapshot.owner_id));
+        return {
+          ...snapshot,
+          owner_name:owner?.roster_name||standing?.owner_name||'Roster'
+        };
+      })}/>
+    </section>
+
+    <footer className="standingsNotes">
+      <b>Notes:</b> Pts = fantasy points · Proj = projected final fantasy
+      points · W-L = combined team wins-losses · Pt Diff = combined point
+      differential. Projections use current betting-market inputs and update
+      on the league projection refresh.
+    </footer>
+  </main>;
+}
