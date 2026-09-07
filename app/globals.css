@@ -571,3 +571,171 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}body{overflow-x:hidden
 .avatar-slate {
   background: linear-gradient(145deg,#64748b,#334155);
 }
+
+.identityEditor,
+.themeEditor {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+
+.identityEditor h2,
+.themeEditor h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.identityEditor p,
+.themeEditor p {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.identityEditorTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.identityPreview {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: 210px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: rgba(255,255,255,.025);
+}
+
+.identityPreview > span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  text-align: right;
+}
+
+.identityPreview b {
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.identityPreview small {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.identityNameField {
+  display: grid;
+  gap: 6px;
+}
+
+.identityOptions {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.identityOptions legend {
+  margin-bottom: 7px;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.avatarOptionGrid {
+  display: grid;
+  grid-template-columns: repeat(4,minmax(0,1fr));
+  gap: 7px;
+}
+
+.avatarOption {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  padding: 8px 4px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255,255,255,.025);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.avatarOption span {
+  color: var(--muted);
+  font-size: 8px;
+  font-weight: 700;
+}
+
+.avatarOption.selected,
+.themeOption.selected {
+  border-color: var(--accent,#3b82f6);
+  box-shadow: 0 0 0 1px var(--accent,#3b82f6);
+}
+
+.avatarColorGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.avatarColorOption {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.avatarColorOption.selected {
+  border-color: #fff;
+  box-shadow:
+    0 0 0 2px var(--bg),
+    0 0 0 4px var(--accent,#3b82f6);
+}
+
+.identitySave {
+  justify-self: start;
+}
+
+@media(max-width:640px) {
+  .identityEditorTitle {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .identityPreview {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .identityPreview > span {
+    text-align: left;
+  }
+
+  .avatarOptionGrid {
+    gap: 5px;
+  }
+
+  .avatarOption {
+    padding: 7px 2px;
+  }
+
+  .avatarOption .rosterAvatar-md {
+    width: 36px;
+    height: 36px;
+  }
+
+  .identitySave {
+    width: 100%;
+  }
+}
