@@ -61,7 +61,10 @@ try {
       .eq('season_id',1),
     supabase.from('teams')
       .select('id,school,abbreviation,mascot'),
-    supabase.from('owners').select('id,name,draft_slot').eq('season_id',1).order('draft_slot'),
+    supabase.from('owners')
+  .select('id,name,draft_slot,roster_name,avatar_key,avatar_color')
+  .eq('season_id',1)
+  .order('draft_slot'),
     supabase.from('weekly_game_odds')
       .select('cfbd_game_id,home_team_id,away_team_id,home_win_probability,away_win_probability,projection_source,books_used,odds_updated_at,fetched_at')
       .eq('season_id',1),
@@ -81,8 +84,29 @@ try {
   );
 }
 
-  const byId=new Map((scheduleTeams||[]).map(t=>[t.id,{school:t.school,abbreviation:t.abbreviation,mascot:t.mascot,owner_id:null,owner_name:null,is_owned:false}]));
-  for(const t of directory||[])byId.set(t.team_id,t);
+  const ownerById=new Map(
+  (owners||[]).map(owner=>[Number(owner.id),owner])
+);
+const byId=new Map((scheduleTeams||[]).map(t=>[t.id,{
+  school:t.school,
+  abbreviation:t.abbreviation,
+  mascot:t.mascot,
+  owner_id:null,
+  owner_name:null,
+  roster_name:null,
+  avatar_key:null,
+  avatar_color:null,
+  is_owned:false
+}]));
+for(const team of directory||[]){
+  const owner=ownerById.get(Number(team.owner_id));
+  byId.set(team.team_id,{
+    ...team,
+    roster_name:owner?.roster_name||null,
+    avatar_key:owner?.avatar_key||null,
+    avatar_color:owner?.avatar_color||null
+  });
+}
   const oddsByGame=new Map((weeklyOdds||[]).map(o=>[String(o.cfbd_game_id),o]));
 
   const decorated=(games||[]).map(g=>({
@@ -149,7 +173,18 @@ try {
     const actual=actualByOwner.get(o.id)||0;
     const projected=actual+(projectedRemaining.get(o.id)||0);
     const max=actual+(maxRemaining.get(o.id)||0);
-    return {owner_id:o.id,owner_name:o.name,draft_slot:o.draft_slot,points_so_far:actual,weekly_point_diff:weeklyPointDiff.get(o.id)||0,projected_points:projected,max_possible:max};
+    return {
+  owner_id:o.id,
+  owner_name:o.name,
+  roster_name:o.roster_name,
+  avatar_key:o.avatar_key,
+  avatar_color:o.avatar_color,
+  draft_slot:o.draft_slot,
+  points_so_far:actual,
+  weekly_point_diff:weeklyPointDiff.get(o.id)||0,
+  projected_points:projected,
+  max_possible:max
+};
   }).sort(compareLiveDisplay);
 
   const officialWeeklyOrder=[...weeklyStandings].sort(compareWeeklyRank).map((r,i)=>({...r,official_weekly_rank:i+1}));
