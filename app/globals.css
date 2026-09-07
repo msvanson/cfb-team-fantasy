@@ -1233,3 +1233,70 @@ body,
 .myRosterHeader .myTeamOwnerIdentity span {
   opacity: 1;
 }
+
+/* Rosters page identity headers */
+.rosterSummaryIdentity {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  opacity: 1 !important;
+}
+
+.rosterSummaryIdentity .ownerIdentity,
+.rosterSummaryIdentity .ownerIdentity span {
+  opacity: 1;
+}
+
+.rosterSummaryIdentity .rosterRank {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  opacity: 1;
+}
+
+.rosterSummaryIdentity .ownerIdentityText b {
+  max-width: 205px;
+  font-size: 12px;
+}
+
+.rosterSummaryIdentity .ownerIdentityText small {
+  font-size: 8px;
+}
+
+.rosterSummaryScore {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  opacity: 1 !important;
+}
+
+@media(max-width:640px) {
+  .rosterSummaryIdentity {
+    gap: 5px;
+  }
+
+  .rosterSummaryIdentity .ownerIdentity {
+    gap: 5px;
+  }
+
+  .rosterSummaryIdentity .rosterAvatar-sm {
+    width: 25px;
+    height: 25px;
+  }
+
+  .rosterSummaryIdentity .ownerIdentityText b {
+    max-width: 120px;
+    font-size: 10px;
+  }
+
+  .rosterSummaryIdentity .ownerIdentityText small {
+    font-size: 7px;
+  }
+
+  .rosterSummaryScore {
+    font-size: 8px;
+  }
+}
