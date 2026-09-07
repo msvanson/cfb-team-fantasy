@@ -936,3 +936,88 @@ body,
     background: var(--dock-glass);
   }
 }
+
+/* Public roster identity */
+.ownerIdentityLink {
+  display: inline-flex;
+  min-width: 0;
+  color: inherit;
+}
+
+.ownerIdentity {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+  vertical-align: middle;
+}
+
+.ownerIdentityText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.08;
+}
+
+.ownerIdentityText b {
+  max-width: 190px;
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ownerIdentityText small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.ownerIdentityLink:hover .ownerIdentityText b {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.ownerIdentityCompact {
+  gap: 6px;
+}
+
+.ownerIdentityCompact .ownerIdentityText b {
+  max-width: 125px;
+  font-size: 11px;
+}
+
+.ownerIdentityCompact .ownerIdentityText small {
+  margin-top: 2px;
+  font-size: 7.5px;
+}
+
+@media(max-width:640px) {
+  .ownerIdentity {
+    gap: 6px;
+  }
+
+  .ownerIdentityText b {
+    max-width: 125px;
+    font-size: 11px;
+  }
+
+  .ownerIdentityText small {
+    font-size: 7.5px;
+  }
+
+  .ownerIdentityCompact .rosterAvatar-sm {
+    width: 24px;
+    height: 24px;
+  }
+
+  .ownerIdentityCompact .ownerIdentityText b {
+    max-width: 92px;
+    font-size: 9px;
+  }
+
+  .ownerIdentityCompact .ownerIdentityText small {
+    font-size: 6.5px;
+  }
+}
