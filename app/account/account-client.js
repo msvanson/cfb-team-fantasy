@@ -1,6 +1,7 @@
 'use client';
 import {useEffect,useMemo,useState} from 'react';
 import {createClient} from '@supabase/supabase-js';
+import PreferencesEditor from './preferences-editor';
 
 export default function AccountClient(){
  const supabase=useMemo(()=>createClient(process.env.NEXT_PUBLIC_SUPABASE_URL,process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY),[]);
@@ -10,7 +11,7 @@ export default function AccountClient(){
 
  async function loadProfile(user){
    if(!user){setProfile(null);return}
-   const {data}=await supabase.from('user_profiles').select('user_id,username,owner_id,role,owners(name)').eq('user_id',user.id).maybeSingle();
+   const {data}=await supabase.from('user_profiles').select('user_id,username,owner_id,role,theme_key,owners(name,roster_name,avatar_key,avatar_color)').eq('user_id',user.id).maybeSingle();
    setProfile(data||null);
  }
   useEffect(()=>{
@@ -65,6 +66,7 @@ export default function AccountClient(){
    <div className="accountGrid"><span>Email</span><b>{session.user.email}</b><span>Username</span><b>{profile?.username||'—'}</b><span>League team</span><b>{profile?.owners?.name||'Not assigned yet'}</b><span>Access</span><b>{profile?.role==='commissioner'?'Commissioner':'Owner'}</b></div>
    {!profile?.owner_id&&<div className="notice">Your account is ready. The commissioner still needs to assign it to your league team.</div>}
    {recovering?<form onSubmit={updatePassword} className="accountForm"><h3>Choose a new password</h3><label>New password<input type="password" value={newPassword} onChange={e=>setNewPassword(e.target.value)} minLength={6} required/></label><button className="button" disabled={busy}>Update Password</button></form>:null}
+      {profile?<PreferencesEditor profile={profile} onProfile={setProfile} onMessage={setMsg}/>:null}
    <div className="accountActions">{profile?.role==='commissioner'?<button className="button" onClick={openCommissioner} disabled={busy}>Open Commissioner Admin</button>:null}<button className="button secondary" onClick={signOut}>Sign Out</button></div>
    {msg&&<div className="notice">{msg}</div>}
  </div>;
