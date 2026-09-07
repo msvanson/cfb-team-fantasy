@@ -1021,3 +1021,96 @@ body,
     font-size: 6.5px;
   }
 }
+
+/* Live roster identity sizing */
+.liveRankTable th:nth-child(1) {
+  width: 10%;
+}
+
+.liveRankTable th:nth-child(2) {
+  width: 32%;
+}
+
+.liveRankTable th:nth-child(3) {
+  width: 11%;
+}
+
+.liveRankTable th:nth-child(4) {
+  width: 14%;
+}
+
+.liveRankTable th:nth-child(5) {
+  width: 11%;
+}
+
+.liveRankTable th:nth-child(6) {
+  width: 22%;
+}
+
+.liveRankTable td:nth-child(2) .ownerIdentityLink {
+  width: 100%;
+}
+
+.liveOwnerIdentity {
+  gap: 4px;
+  max-width: 100%;
+}
+
+.liveOwnerIdentity .rosterAvatar-sm {
+  width: 20px;
+  height: 20px;
+}
+
+.liveOwnerIdentity .ownerIdentityText b {
+  max-width: 72px;
+  font-size: 8.5px;
+}
+
+.liveOwnerIdentity .ownerIdentityText small {
+  margin-top: 1px;
+  font-size: 6.5px;
+}
+
+.gameOwnerIdentity {
+  flex: 0 1 auto;
+  margin-left: auto;
+  padding-left: 6px;
+  border-left: 1px solid var(--line);
+}
+
+.gameOwnerIdentity .rosterAvatar-sm {
+  width: 20px;
+  height: 20px;
+}
+
+.gameOwnerIdentity .ownerIdentityText b {
+  max-width: 72px;
+  font-size: 8px;
+}
+
+.gameOwnerIdentity .ownerIdentityText small {
+  margin-top: 1px;
+  font-size: 6.5px;
+}
+
+@media(max-width:640px) {
+  .liveOwnerIdentity .rosterAvatar-sm,
+  .gameOwnerIdentity .rosterAvatar-sm {
+    width: 18px;
+    height: 18px;
+  }
+
+  .liveOwnerIdentity .ownerIdentityText b {
+    max-width: 62px;
+    font-size: 8px;
+  }
+
+  .gameOwnerIdentity {
+    padding-left: 4px;
+  }
+
+  .gameOwnerIdentity .ownerIdentityText b {
+    max-width: 58px;
+    font-size: 7.5px;
+  }
+}
