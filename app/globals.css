@@ -1189,3 +1189,41 @@ body,
     width: 60px;
   }
 }
+
+/* My Team roster identity header */
+.myTeamOwnerIdentity {
+  gap: 11px;
+}
+
+.myTeamOwnerIdentity .ownerIdentityText b {
+  max-width: 360px;
+  font-size: 17px;
+  line-height: 1.1;
+}
+
+.myTeamOwnerIdentity .ownerIdentityText small {
+  margin-top: 4px;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+@media(max-width:640px) {
+  .myTeamOwnerIdentity {
+    gap: 8px;
+  }
+
+  .myTeamOwnerIdentity .rosterAvatar-md {
+    width: 38px;
+    height: 38px;
+  }
+
+  .myTeamOwnerIdentity .ownerIdentityText b {
+    max-width: 205px;
+    font-size: 15px;
+  }
+
+  .myTeamOwnerIdentity .ownerIdentityText small {
+    font-size: 8px;
+  }
+}
