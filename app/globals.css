@@ -828,3 +828,111 @@ html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}body{overflow-x:hidden
 .themePreview-royal .themeSwatches i:nth-child(3) {
   background: #f4c542;
 }
+
+/* App color themes */
+:root,
+html[data-theme='midnight'] {
+  --bg: #0b1220;
+  --card: #111827;
+  --panel: #0f172a;
+  --muted: #94a3b8;
+  --text: #f8fafc;
+  --line: #243244;
+  --accent: #2563eb;
+  --accent-border: #3b82f6;
+  --active: #172033;
+  --nav-glass: rgba(11,18,32,.94);
+  --dock-glass: rgba(11,18,32,.97);
+}
+
+html[data-theme='stadium'] {
+  --bg: #061710;
+  --card: #0d261b;
+  --panel: #102f22;
+  --muted: #9ab7a7;
+  --text: #f5fbf7;
+  --line: #28523d;
+  --accent: #b78a18;
+  --accent-border: #d4a72c;
+  --active: #183c2a;
+  --nav-glass: rgba(6,23,16,.94);
+  --dock-glass: rgba(6,23,16,.97);
+}
+
+html[data-theme='crimson'] {
+  --bg: #19080d;
+  --card: #2b1018;
+  --panel: #35151f;
+  --muted: #c0a3aa;
+  --text: #fff8fa;
+  --line: #5c2937;
+  --accent: #b42336;
+  --accent-border: #dc3545;
+  --active: #481b27;
+  --nav-glass: rgba(25,8,13,.94);
+  --dock-glass: rgba(25,8,13,.97);
+}
+
+html[data-theme='royal'] {
+  --bg: #070e21;
+  --card: #101b3b;
+  --panel: #14234d;
+  --muted: #a8b4d4;
+  --text: #f8faff;
+  --line: #304679;
+  --accent: #c49317;
+  --accent-border: #f4c542;
+  --active: #1a2d60;
+  --nav-glass: rgba(7,14,33,.94);
+  --dock-glass: rgba(7,14,33,.97);
+}
+
+html,
+body,
+.card,
+.nav a,
+.button,
+.field {
+  transition: background-color .18s ease,
+    border-color .18s ease,
+    color .18s ease;
+}
+
+.nav a,
+.field,
+.button.secondary,
+.mobileMoreNav a,
+.accountIconButton,
+.liveFilters,
+.claimActions button,
+.accountForm input,
+.accountAssign select,
+.waiverDialog select {
+  background: var(--panel);
+}
+
+.table th,
+.desktopNav a.active,
+.mobileMoreNav a.active,
+.desktopNav a:hover,
+.leagueHubLink:hover,
+.liveFilters button.active {
+  background: var(--active);
+}
+
+.button {
+  background: var(--accent);
+  border-color: var(--accent-border);
+}
+
+@media(min-width:641px) {
+  .desktopNav {
+    background: var(--nav-glass);
+  }
+}
+
+@media(max-width:640px) {
+  .mobileDock {
+    background: var(--dock-glass);
+  }
+}
