@@ -73,8 +73,8 @@ export async function GET(req) {
     h2hResult,
     h2gResult
   ] = await Promise.all([
-    s
-      .from('team_directory')
+        s
+      .from('owner_current_team_contributions')
       .select('*')
       .eq('season_id', 1)
       .eq('owner_id', oid)
