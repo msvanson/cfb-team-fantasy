@@ -1300,3 +1300,93 @@ body,
     font-size: 8px;
   }
 }
+
+/* Condensed finalized weekly scoring */
+.weeklyHistoryTitle {
+  align-items: center;
+}
+
+.weeklyHistoryTitle .pill {
+  text-align: right;
+}
+
+.weeklyHistoryTableWrap {
+  overflow-x: hidden;
+}
+
+.weeklyHistoryTable {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+}
+
+.weeklyHistoryTable th:nth-child(1),
+.weeklyHistoryTable td:nth-child(1) {
+  width: 12%;
+  text-align: center;
+}
+
+.weeklyHistoryTable th:nth-child(2),
+.weeklyHistoryTable td:nth-child(2) {
+  width: 52%;
+}
+
+.weeklyHistoryTable th:nth-child(3),
+.weeklyHistoryTable td:nth-child(3),
+.weeklyHistoryTable th:nth-child(4),
+.weeklyHistoryTable td:nth-child(4) {
+  width: 18%;
+  text-align: center;
+}
+
+.weeklyHistoryTable .ownerIdentity {
+  min-width: 0;
+}
+
+.weeklyHistoryTable .ownerIdentityText {
+  min-width: 0;
+}
+
+.weeklyHistoryTable .ownerIdentityText b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media(max-width:640px) {
+  .weeklyHistoryTitle {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .weeklyHistoryTitle .pill {
+    width: 100%;
+    text-align: left;
+    font-size: 8px;
+  }
+
+  .weeklyHistoryTable th,
+  .weeklyHistoryTable td {
+    padding: 7px 3px;
+    font-size: 9px;
+  }
+
+  .weeklyHistoryTable th {
+    font-size: 7px;
+  }
+
+  .weeklyHistoryTable .rosterAvatar-sm {
+    width: 24px;
+    height: 24px;
+  }
+
+  .weeklyHistoryTable .ownerIdentityText b {
+    max-width: 115px;
+    font-size: 9px;
+  }
+
+  .weeklyHistoryTable .ownerIdentityText small {
+    font-size: 7px;
+  }
+}
