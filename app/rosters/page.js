@@ -3,12 +3,11 @@ import {LeagueHeader} from '../league-header';
 import {OwnerIdentity} from '../owner-identity';
 import {TeamName} from '../team-name';
 import {
-  getLatestTeamProjections,
+  getOwnerCurrentTeamContributions,
   getOwnerProjectionTotals,
   getOwners,
   getPreviousTeams,
-  getStandings,
-  getTeamDirectory
+  getStandings
 } from '../../lib/data';
 
 export const dynamic='force-dynamic';
@@ -20,25 +19,21 @@ const md=date=>{
 };
 
 export default async function Page(){
-  const [
+    const [
     standings,
     owners,
     teams,
-    projections,
     ownerProjections,
     previous
   ]=await Promise.all([
     getStandings(),
     getOwners(),
-    getTeamDirectory(),
-    getLatestTeamProjections(),
+    getOwnerCurrentTeamContributions(),
     getOwnerProjectionTotals(),
     getPreviousTeams()
   ]);
   const ownerMap=new Map(owners.map(owner=>[Number(owner.id),owner]));
-  const projectionMap=new Map(
-    projections.map(item=>[Number(item.team_id),item.projected_points])
-  );
+  
   const ownerProjectionMap=new Map(ownerProjections.map(item=>[
     Number(item.owner_id),
     item.projected_points??
@@ -101,9 +96,9 @@ export default async function Page(){
                 <small>{team.conference_code}</small>
               </span>
               <b>{team.fantasy_points??0}</b>
-              <b>{projectionMap.has(Number(team.team_id))
-                ?Number(projectionMap.get(Number(team.team_id))).toFixed(1)
-                :'—'}</b>
+                            <b>{team.projected_points==null
+                ?'—'
+                :Number(team.projected_points).toFixed(1)}</b>
             </div>)}
           </div>
 
