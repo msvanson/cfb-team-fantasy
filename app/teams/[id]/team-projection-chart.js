@@ -49,6 +49,11 @@ export default function TeamProjectionChart({history=[]}){
   const points=chartPoints(history);
   if(!points.length)return <div className="card standingsChartEmpty">No projection history available.</div>;
 
+  const current=history
+  .map(row=>({...row,value:Number(row.projected_points),wins:Number(row.projected_wins)}))
+  .filter(row=>Number.isFinite(row.value)&&Number.isFinite(timestamp(row.snapshot_at)))
+  .sort((a,b)=>timestamp(a.snapshot_at)-timestamp(b.snapshot_at))
+  .at(-1);
   const W=680,H=270,L=48,R=24,T=24,B=52;
   const vals=points.map(point=>point.value);
   const lo=Math.floor(Math.min(...vals)-1);
@@ -73,9 +78,9 @@ export default function TeamProjectionChart({history=[]}){
       </svg>
     </div>
     <div className="teamProjectionLatest">
-      <span><small>Current projection</small><b>{points.at(-1).value.toFixed(2)} pts</b></span>
-      <span><small>Projected wins</small><b>{points.at(-1).wins.toFixed(2)}</b></span>
-      <span><small>Change</small><b>{points.length>1?`${points.at(-1).value-points[0].value>=0?'+':''}${(points.at(-1).value-points[0].value).toFixed(2)}`:'—'}</b></span>
+      <span><small>Current projection</small><b>{current.value.toFixed(2)} pts</b></span>
+<span><small>Projected wins</small><b>{current.wins.toFixed(2)}</b></span>
+<span><small>Change</small><b>{`${current.value-points[0].value>=0?'+':''}${(current.value-points[0].value).toFixed(2)}`}</b></span>
     </div>
   </div>;
 }
