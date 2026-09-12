@@ -62,7 +62,8 @@ try {
     supabase.from('teams')
       .select('id,school,abbreviation,mascot'),
     supabase.from('owners')
-  .select('id,name,draft_slot,roster_name,avatar_key,avatar_color')
+  
+  .select('id,name,draft_slot,roster_name,avatar_key,avatar_color,emblem_config')
   .eq('season_id',1)
   .order('draft_slot'),
     supabase.from('weekly_game_odds')
@@ -95,7 +96,8 @@ const byId=new Map((scheduleTeams||[]).map(t=>[t.id,{
   owner_name:null,
   roster_name:null,
   avatar_key:null,
-  avatar_color:null,
+    avatar_color:null,
+  emblem_config:null,
   is_owned:false
 }]));
 for(const team of directory||[]){
@@ -103,8 +105,9 @@ for(const team of directory||[]){
   byId.set(team.team_id,{
     ...team,
     roster_name:owner?.roster_name||null,
-    avatar_key:owner?.avatar_key||null,
-    avatar_color:owner?.avatar_color||null
+        avatar_key:owner?.avatar_key||null,
+    avatar_color:owner?.avatar_color||null,
+    emblem_config:owner?.emblem_config||null
   });
 }
   const oddsByGame=new Map((weeklyOdds||[]).map(o=>[String(o.cfbd_game_id),o]));
@@ -178,7 +181,8 @@ for(const team of directory||[]){
   owner_name:o.name,
   roster_name:o.roster_name,
   avatar_key:o.avatar_key,
-  avatar_color:o.avatar_color,
+    avatar_color:o.avatar_color,
+  emblem_config:o.emblem_config,
   draft_slot:o.draft_slot,
   points_so_far:actual,
   weekly_point_diff:weeklyPointDiff.get(o.id)||0,
