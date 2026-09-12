@@ -37,7 +37,7 @@ export async function GET(req) {
 
   const { data: profile, error: profileError } = await s
     .from('user_profiles')
-    .select('owner_id,username,role,owners(name,roster_name,avatar_key,avatar_color)')
+    .select('owner_id,username,role,owners(name,roster_name,avatar_key,avatar_color,emblem_config)')
     .eq('user_id', user.id)
     .maybeSingle();
 
