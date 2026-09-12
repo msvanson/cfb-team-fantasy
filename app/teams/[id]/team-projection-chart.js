@@ -22,8 +22,7 @@ function chartPoints(history){
   if(!byRun.length)return [];
 
   const points=[];
-  const firstWeekStart=timestamp(FANTASY_WEEKS_2026[0].start);
-  const preseason=latestAtOrBefore(byRun,firstWeekStart)||byRun[0];
+  const preseason=byRun[0];
   points.push({...preseason,label:'Pre',title:'Preseason'});
 
   for(const [index,week] of FANTASY_WEEKS_2026.entries()){
