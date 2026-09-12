@@ -1445,3 +1445,350 @@ body,
     font-size: 7px;
   }
 }
+
+/* Custom emblem builder */
+
+.rosterAvatarCustom {
+  overflow: hidden;
+  background: linear-gradient(
+    145deg,
+    var(--emblem-background),
+    var(--emblem-background-2)
+  );
+}
+
+.rosterAvatarCustom svg {
+  width: 100%;
+  height: 100%;
+}
+
+.emblemEditor {
+  display: grid;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(255,255,255,.02);
+}
+
+.emblemEditorHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.emblemEditorHeader h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.emblemEditorHeader p {
+  margin: 3px 0 0;
+}
+
+.emblemPresetGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(5,minmax(0,1fr));
+  gap: 7px;
+}
+
+.emblemPresetGrid button,
+.emblemShapeGrid button {
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 8px 4px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(255,255,255,.025);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.emblemPresetGrid button:hover,
+.emblemShapeGrid button:hover,
+.emblemLayerList button:hover {
+  border-color:
+    var(--accent,#3b82f6);
+}
+
+.emblemPresetGrid span,
+.emblemShapeGrid span {
+  overflow: hidden;
+  width: 100%;
+  color: var(--muted);
+  font-size: 8px;
+  font-weight: 800;
+  text-align: center;
+  text-overflow: ellipsis;
+}
+
+.emblemWorkspace {
+  display: grid;
+  grid-template-columns:
+    minmax(190px,230px)
+    minmax(0,1fr);
+  align-items: center;
+  gap: 18px;
+}
+
+.emblemCanvas {
+  position: relative;
+  width: min(230px,100%);
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 5px solid #fff;
+  border-radius: 50%;
+  background: linear-gradient(
+    145deg,
+    var(--emblem-background),
+    var(--emblem-background-2)
+  );
+  box-shadow:
+    inset 0 2px 0
+      rgba(255,255,255,.2),
+    0 12px 30px
+      rgba(0,0,0,.25);
+  touch-action: none;
+  user-select: none;
+}
+
+.emblemCanvas > svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.emblemCanvas .emblemLayer {
+  cursor: grab;
+}
+
+.emblemCanvas .emblemLayer:active {
+  cursor: grabbing;
+}
+
+.emblemCanvas .emblemLayer.selected {
+  filter:
+    drop-shadow(
+      0 0 4px
+      rgba(255,255,255,.95)
+    );
+}
+
+.emblemLayerList {
+  display: grid;
+  align-content: center;
+  gap: 6px;
+}
+
+.emblemLayerList > b {
+  margin-bottom: 2px;
+  font-size: 11px;
+}
+
+.emblemLayerList button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 9px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255,255,255,.025);
+  color: var(--text);
+  font-size: 9px;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+}
+
+.emblemLayerList button.selected {
+  border-color:
+    var(--accent,#3b82f6);
+  box-shadow:
+    0 0 0 1px
+    var(--accent,#3b82f6);
+}
+
+.emblemLayerList button span {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  background: rgba(255,255,255,.08);
+  font-size: 13px;
+}
+
+.emblemLayerList small {
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.emblemShapeGrid {
+  display: grid;
+  grid-template-columns:
+    repeat(9,minmax(0,1fr));
+  gap: 6px;
+}
+
+.emblemShapeGrid button:disabled {
+  cursor: not-allowed;
+  opacity: .35;
+}
+
+.emblemShapeGrid svg {
+  width: 30px;
+  height: 30px;
+  color: var(--text);
+}
+
+.emblemTextAdd {
+  display: grid;
+  grid-template-columns:
+    minmax(0,1fr) auto;
+  gap: 8px;
+}
+
+.emblemTextAdd input {
+  text-transform: uppercase;
+}
+
+.emblemBackgroundControls,
+.emblemSelectedControls {
+  display: grid;
+  gap: 12px;
+}
+
+.emblemColorPicker {
+  display: grid;
+  gap: 7px;
+}
+
+.emblemColorPicker > span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.emblemColorPicker > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.emblemColorPicker button {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.emblemColorPicker button.selected {
+  border-color: #fff;
+  box-shadow:
+    0 0 0 2px var(--bg),
+    0 0 0 4px
+      var(--accent,#3b82f6);
+}
+
+.emblemSelectedControls > label {
+  display: grid;
+  gap: 5px;
+}
+
+.emblemSelectedControls
+> label > span {
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.emblemSelectedControls
+input[type="range"] {
+  width: 100%;
+  accent-color:
+    var(--accent,#3b82f6);
+}
+
+.emblemLayerActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.emblemLayerActions .button {
+  min-height: 34px;
+  padding: 7px 10px;
+  font-size: 9px;
+}
+
+.emblemLayerActions
+.emblemDelete {
+  color: #fca5a5;
+}
+
+@media(max-width:640px) {
+  .emblemEditor {
+    margin-inline: -4px;
+    padding: 12px;
+  }
+
+  .emblemPresetGrid {
+    grid-template-columns:
+      repeat(5,minmax(54px,1fr));
+    overflow-x: auto;
+    padding: 2px 2px 7px;
+  }
+
+  .emblemWorkspace {
+    grid-template-columns:
+      minmax(0,1fr);
+    justify-items: center;
+  }
+
+  .emblemCanvas {
+    width: min(260px,82vw);
+  }
+
+  .emblemLayerList {
+    grid-template-columns:
+      repeat(2,minmax(0,1fr));
+    width: 100%;
+  }
+
+  .emblemLayerList > b,
+  .emblemLayerList > small {
+    grid-column: 1/-1;
+  }
+
+  .emblemShapeGrid {
+    grid-template-columns:
+      repeat(5,minmax(0,1fr));
+  }
+
+  .emblemColorPicker > div {
+    gap: 10px;
+  }
+
+  .emblemColorPicker button {
+    width: 30px;
+    height: 30px;
+  }
+
+  .emblemLayerActions {
+    display: grid;
+    grid-template-columns:
+      repeat(2,minmax(0,1fr));
+  }
+
+  .emblemLayerActions
+  .emblemDelete {
+    grid-column: 1/-1;
+  }
+}
