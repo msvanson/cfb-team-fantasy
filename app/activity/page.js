@@ -31,7 +31,7 @@ async function getUnsuccessfulWaiverClaims(){
       'id,owner_id,add_team_id,drop_team_id,status,waiver_period_key,processed_at,failure_reason'
     )
     .eq('season_id',1)
-    .eq('status','unsuccessful')
+    .in('status',['lost_to_priority','invalid','expired'])
     .not('processed_at','is',null)
     .order('processed_at',{ascending:false});
 
