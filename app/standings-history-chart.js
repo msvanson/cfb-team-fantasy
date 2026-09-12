@@ -2,7 +2,7 @@
 export default function StandingsHistoryChart({snapshots=[]}){
  const weekNum=w=>w==='CC'?14:w==='PLAYOFFS'?15:Number(String(w).replace(/\D/g,''))||99;
  const weeks=[...new Set(snapshots.map(x=>x.week_key))].sort((a,b)=>weekNum(a)-weekNum(b));
- if(!weeks.length)return <div className="card standingsChartEmpty">The standings graph will begin after Week 1 is finalized.</div>;
+ if(weeks.length<2)return <div className="card standingsChartEmpty">Standings history will appear after Week 2 is finalized.</div>;
  const owners=[...new Map(snapshots.map(x=>[Number(x.owner_id),{id:Number(x.owner_id),name:x.owner_name}])).values()];
  const W=Math.max(720,weeks.length*90+120),H=330,L=55,R=25,T=25,B=55;
  const x=i=>weeks.length===1?(L+W-R)/2:L+i*(W-L-R)/(weeks.length-1),y=r=>T+(Number(r)-1)*(H-T-B)/7;
