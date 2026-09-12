@@ -2,21 +2,23 @@ import {Nav} from './nav';
 import {LeagueHeader} from './league-header';
 import {OwnerIdentity} from './owner-identity';
 import {
-  getOwners,
+    getOwners,
+  getOwnerProjectionHistory,
   getOwnerProjectionTotals,
   getStandings,
   getWeeklySnapshots
 } from '../lib/data';
 import StandingsHistoryChart from './standings-history-chart';
-
+import RosterProjectionHistoryChart from './roster-projection-history-chart';
 export const dynamic='force-dynamic';
 
 export default async function Home(){
-  const [standings,owners,ownerProj,snapshots]=await Promise.all([
+    const [standings,owners,ownerProj,snapshots,projectionHistory]=await Promise.all([
     getStandings(),
     getOwners(),
     getOwnerProjectionTotals(),
-    getWeeklySnapshots()
+        getWeeklySnapshots(),
+    getOwnerProjectionHistory()
   ]);
   const ownerMap=new Map(owners.map(owner=>[Number(owner.id),owner]));
   const projectionMap=new Map(
@@ -79,7 +81,18 @@ export default async function Home(){
           ...snapshot,
           owner_name:owner?.roster_name||standing?.owner_name||'Roster'
         };
-      })}/>
+            })}/>
+    </section>
+
+    <section className="section">
+      <div className="sectionTitle">
+        <h2>Roster Projection History</h2>
+        <span className="muted">Projected final fantasy points</span>
+      </div>
+      <RosterProjectionHistoryChart
+        history={projectionHistory}
+        owners={owners}
+      />
     </section>
 
     <footer className="standingsNotes">
