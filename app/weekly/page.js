@@ -1,2 +1,172 @@
-import {Nav} from '../nav';import {LeagueHeader} from '../league-header';import {getWeekly,getOwnerWeeklySummary} from '../../lib/data';export const dynamic='force-dynamic';
-export default async function Page(){const [rows,summary]=await Promise.all([getWeekly(),getOwnerWeeklySummary()]);const groups=rows.reduce((a,r)=>((a[r.week_key]??=[]).push(r),a),{}),currentSummary=summary.filter(x=>x.season_id===1);const ranks=new Map(),scores=new Map();Object.values(groups).forEach(rs=>{[...rs].sort((a,b)=>b.weekly_points-a.weekly_points).forEach((r,i)=>{const id=Number(r.owner_id);ranks.set(id,[...(ranks.get(id)||[]),i+1]);scores.set(id,[...(scores.get(id)||[]),Number(r.weekly_points||0)])})});const stats=currentSummary.map(r=>{const id=Number(r.owner_id),rr=ranks.get(id)||[],ss=scores.get(id)||[];return {...r,avg_rank:rr.length?rr.reduce((a,b)=>a+b,0)/rr.length:null,avg_pts:ss.length?ss.reduce((a,b)=>a+b,0)/ss.length:null,best:ss.length?Math.max(...ss):Number(r.highest_weekly_score||0)}}).sort((a,b)=>Number(b.weekly_wins||0)-Number(a.weekly_wins||0)||(a.avg_rank??999)-(b.avg_rank??999));return <main className="shell"><LeagueHeader/><Nav/><section className="section weeklyPerformanceSection"><div className="tableWrap"><table className="table weeklyPerformanceTable"><thead><tr><th>Owner</th><th>Wins</th><th>Best</th><th>Avg Rk</th><th>Avg Pts</th></tr></thead><tbody>{stats.map(r=><tr key={r.owner_id}><td><b>{r.owner_name}</b></td><td>{r.weekly_wins??0}</td><td>{r.best??0}</td><td>{r.avg_rank==null?'—':r.avg_rank.toFixed(1)}</td><td>{r.avg_pts==null?'—':r.avg_pts.toFixed(1)}</td></tr>)}</tbody></table></div></section><section className="section weeklyHistorySection"><div className="sectionTitle"><h2>Weekly Scoring History</h2></div>{Object.keys(groups).length?Object.entries(groups).map(([week,rs])=>{const max=Math.max(...rs.map(x=>x.weekly_points));return <div className="weeklyHistoryBlock" key={week}><div className="sectionTitle"><h3>{week}</h3><span className="pill">Winner: {rs.filter(x=>x.weekly_points===max).map(x=>x.owner_name).join(' / ')} · {max} pts</span></div><div className="tableWrap"><table className="table"><thead><tr><th>Rank</th><th>Owner</th><th>Pts</th></tr></thead><tbody>{[...rs].sort((a,b)=>b.weekly_points-a.weekly_points).map((r,i)=><tr key={r.owner_name}><td>{i+1}</td><td><b>{r.owner_name}</b></td><td>{r.weekly_points}</td></tr>)}</tbody></table></div></div>}):<div className="card"><div className="liveEmpty"><b>Weekly scoring is ready.</b><br/>Results will populate automatically once 2026 games begin.</div></div>}</section><footer className="standingsNotes"><b>Notes:</b> Wins = fantasy-week wins · Best = highest fantasy-point score in one completed week · Avg Rk = average weekly rank · Avg Pts = average weekly fantasy points.</footer></main>}
+import {Nav} from '../nav';
+import {LeagueHeader} from '../league-header';
+import {OwnerIdentity} from '../owner-identity';
+import {
+  getOwners,
+  getWeeklySnapshots
+} from '../../lib/data';
+
+export const dynamic='force-dynamic';
+
+const signed=value=>{
+  const number=Number(value||0);
+  return `${number>0?'+':''}${number}`;
+};
+
+export default async function Page(){
+  const [snapshots,owners]=await Promise.all([
+    getWeeklySnapshots(),
+    getOwners()
+  ]);
+
+  const ownerMap=new Map(
+    owners.map(owner=>[Number(owner.id),owner])
+  );
+
+  const groups=new Map();
+
+  for(const snapshot of snapshots){
+    if(!groups.has(snapshot.week_key)){
+      groups.set(snapshot.week_key,[]);
+    }
+
+    groups.get(snapshot.week_key).push(snapshot);
+  }
+
+  const stats=owners.map(owner=>{
+    const rows=snapshots.filter(
+      snapshot=>Number(snapshot.owner_id)===Number(owner.id)
+    );
+
+    const scores=rows.map(row=>Number(row.weekly_points||0));
+    const ranks=rows.map(row=>Number(row.weekly_rank||0));
+
+    return {
+      owner,
+      weekly_wins:rows.filter(row=>row.result==='winner').length,
+      best:scores.length?Math.max(...scores):0,
+      avg_rank:ranks.length
+        ?ranks.reduce((total,value)=>total+value,0)/ranks.length
+        :null,
+      avg_points:scores.length
+        ?scores.reduce((total,value)=>total+value,0)/scores.length
+        :null
+    };
+  }).sort((a,b)=>
+    b.weekly_wins-a.weekly_wins||
+    (a.avg_rank??999)-(b.avg_rank??999)||
+    Number(a.owner.draft_slot)-Number(b.owner.draft_slot)
+  );
+
+  return <main className="shell">
+    <LeagueHeader/>
+    <Nav/>
+
+    <section className="section weeklyPerformanceSection">
+      <div className="tableWrap">
+        <table className="table weeklyPerformanceTable">
+          <thead>
+            <tr>
+              <th>Roster</th>
+              <th>Wins</th>
+              <th>Best</th>
+              <th>Avg Rk</th>
+              <th>Avg Pts</th>
+            </tr>
+          </thead>
+          <tbody>{stats.map(row=><tr key={row.owner.id}>
+            <td>
+              <OwnerIdentity
+                owner={row.owner}
+                href={`/owners/${row.owner.id}`}
+                size="sm"
+                compact
+              />
+            </td>
+            <td>{row.weekly_wins}</td>
+            <td>{row.best}</td>
+            <td>
+              {row.avg_rank==null?'—':row.avg_rank.toFixed(1)}
+            </td>
+            <td>
+              {row.avg_points==null?'—':row.avg_points.toFixed(1)}
+            </td>
+          </tr>)}</tbody>
+        </table>
+      </div>
+    </section>
+
+    <section className="section weeklyHistorySection">
+      <div className="sectionTitle">
+        <h2>Weekly Scoring History</h2>
+      </div>
+
+      {groups.size?[...groups.entries()].map(([week,rows])=>{
+        const ordered=[...rows].sort(
+          (a,b)=>Number(a.weekly_rank)-Number(b.weekly_rank)
+        );
+        const winner=ordered.find(row=>row.result==='winner');
+        const winnerOwner=winner
+          ?ownerMap.get(Number(winner.owner_id))
+          :null;
+        const winnerName=winnerOwner?.roster_name||
+          winnerOwner?.name||
+          'Roster';
+
+        return <div className="weeklyHistoryBlock" key={week}>
+          <div className="sectionTitle weeklyHistoryTitle">
+            <h3>{week}</h3>
+            {winner?<span className="pill">
+              Winner: {winnerName} · {winner.weekly_points} pts ·{' '}
+              {signed(winner.weekly_point_differential)}
+            </span>:null}
+          </div>
+
+          <div className="tableWrap weeklyHistoryTableWrap">
+            <table className="table weeklyHistoryTable">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Roster</th>
+                  <th>Pts</th>
+                  <th>Diff</th>
+                </tr>
+              </thead>
+              <tbody>{ordered.map(row=>{
+                const owner=ownerMap.get(Number(row.owner_id))||{
+                  id:row.owner_id,
+                  name:'Roster'
+                };
+
+                return <tr key={row.owner_id}>
+                  <td><b>{row.weekly_rank}</b></td>
+                  <td>
+                    <OwnerIdentity
+                      owner={owner}
+                      href={`/owners/${row.owner_id}`}
+                      size="sm"
+                      compact
+                    />
+                  </td>
+                  <td><b>{row.weekly_points}</b></td>
+                  <td>{signed(row.weekly_point_differential)}</td>
+                </tr>;
+              })}</tbody>
+            </table>
+          </div>
+        </div>;
+      }):<div className="card">
+        <div className="liveEmpty">
+          <b>Weekly scoring is ready.</b><br/>
+          Results will appear after the first fantasy week is finalized.
+        </div>
+      </div>}
+    </section>
+
+    <footer className="standingsNotes">
+      <b>Notes:</b> Weekly rankings use fantasy points, then point
+      differential, then draft order. Results are locked when each fantasy
+      week ends.
+    </footer>
+  </main>;
+}

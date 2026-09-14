@@ -11,7 +11,7 @@ export default function AccountClient(){
 
  async function loadProfile(user){
    if(!user){setProfile(null);return}
-   const {data}=await supabase.from('user_profiles').select('user_id,username,owner_id,role,theme_key,owners(name,roster_name,avatar_key,avatar_color)').eq('user_id',user.id).maybeSingle();
+      const {data}=await supabase.from('user_profiles').select('user_id,username,owner_id,role,theme_key,owners(name,roster_name,avatar_key,avatar_color,emblem_config)').eq('user_id',user.id).maybeSingle();
    setProfile(data||null);
  }
   useEffect(()=>{

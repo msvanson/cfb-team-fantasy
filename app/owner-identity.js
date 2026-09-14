@@ -21,6 +21,7 @@ export function OwnerIdentity({
     <RosterAvatar
       avatarKey={owner?.avatar_key}
       avatarColor={owner?.avatar_color}
+      emblemConfig={owner?.emblem_config}
       size={size}
     />
     <span className="ownerIdentityText">
