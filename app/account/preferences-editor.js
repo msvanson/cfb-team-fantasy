@@ -71,7 +71,8 @@ export default function PreferencesEditor({
   );
 
   const owner = profile?.owners;
-
+  const fallbackRosterName =
+    `${owner?.name || 'Owner'}'s Team`;
   const [
     rosterName,
     setRosterName
@@ -86,8 +87,9 @@ export default function PreferencesEditor({
 
   useEffect(() => {
     if (owner) {
-      setRosterName(
-        owner.roster_name || ''
+            setRosterName(
+        owner.roster_name
+        || fallbackRosterName
       );
 
       setEmblemConfig(
@@ -104,6 +106,7 @@ export default function PreferencesEditor({
     }
   }, [
     owner?.roster_name,
+        owner?.name,
     owner?.avatar_key,
     owner?.avatar_color,
     owner?.emblem_config,
@@ -156,7 +159,9 @@ export default function PreferencesEditor({
     try {
       const result = await patch({
         action: 'identity',
-        rosterName,
+                rosterName:
+          rosterName.trim()
+          || fallbackRosterName,
         emblemConfig:
           emblemConfig
           || createLegacyEmblem(

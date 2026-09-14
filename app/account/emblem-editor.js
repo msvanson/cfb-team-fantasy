@@ -115,7 +115,7 @@ export default function EmblemEditor({
   }
 
   function addShape(shape) {
-    if (config.layers.length >= 4) {
+    if (config.layers.length >= 10) {
       return;
     }
 
@@ -148,7 +148,7 @@ export default function EmblemEditor({
 
     if (
       !/^[A-Z0-9]{1,3}$/.test(clean)
-      || config.layers.length >= 4
+      || config.layers.length >= 10
     ) {
       return;
     }
@@ -442,7 +442,7 @@ export default function EmblemEditor({
           </button>)}
 
         <small>
-          {config.layers.length}/4 layers
+          {config.layers.length}/10 layers
         </small>
       </div>
     </div>
@@ -456,7 +456,7 @@ export default function EmblemEditor({
             key={shape.key}
             type="button"
             disabled={
-              config.layers.length >= 4
+              config.layers.length >= 10
             }
             onClick={
               () => addShape(shape.key)
@@ -506,7 +506,7 @@ export default function EmblemEditor({
           className="button secondary"
           disabled={
             !text
-            || config.layers.length >= 4
+            || config.layers.length >= 10
           }
           onClick={addText}
         >
