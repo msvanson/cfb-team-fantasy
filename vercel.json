@@ -9,6 +9,10 @@
       "schedule": "0 10 * * 0"
     },
     {
+      "path": "/api/admin/weekly-odds-test",
+      "schedule": "0 11 * * *"
+    },
+    {
       "path": "/api/cron/waivers",
       "schedule": "0 4 * 9,10 2"
     },
