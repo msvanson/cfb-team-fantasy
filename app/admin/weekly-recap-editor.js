@@ -2,11 +2,6 @@
 
 import { useEffect, useState } from 'react';
 
-function signed(value) {
-  const number = Number(value || 0);
-  return `${number > 0 ? '+' : ''}${number}`;
-}
-
 function recapFacts(recap) {
   return recap?.recap_data || {};
 }
@@ -219,12 +214,9 @@ export function WeeklyRecapEditor() {
 
       <div className="weeklyRecapAdminList">
         {recaps.map(recap => {
-          const facts = recapFacts(recap);
+                    const facts = recapFacts(recap);
           const winner = facts.winner;
-          const runnerUp = facts.runnerUp;
-          const closest = facts.closestFinish;
           const mover = facts.biggestMover;
-          const bestTeam = facts.bestTeam;
           const published = recap.status === 'published';
 
           return (
@@ -242,21 +234,16 @@ export function WeeklyRecapEditor() {
                 </span>
               </div>
 
-              <div className="weeklyRecapFacts">
+                            <div className="weeklyRecapFacts">
                 <div>
                   <small>Winner</small>
-                  <b>{winner?.rosterName || 'â'}</b>
-                  <span>{winner?.weeklyPoints ?? 'â'} pts</span>
-                </div>
-
-                <div>
-                  <small>Closest Finish</small>
-                  <b>
-                    {closest?.winningMargin === 0
-                      ? 'Tiebreaker'
-                      : `${closest?.winningMargin ?? 'â'} pt margin`}
-                  </b>
-                  <span>{runnerUp?.rosterName || 'â'}</span>
+                  <b>{winner?.rosterName || '—'}</b>
+                  <span>
+                    {winner?.weeklyPoints ?? '—'} pts
+                    {' · '}
+                    {winner?.weeklyPointDifferential >= 0 ? '+' : ''}
+                    {winner?.weeklyPointDifferential ?? 0} diff
+                  </span>
                 </div>
 
                 <div>
@@ -264,18 +251,8 @@ export function WeeklyRecapEditor() {
                   <b>{mover?.rosterName || 'No movement'}</b>
                   <span>
                     {mover
-                      ? `â² ${mover.movement} to No. ${mover.currentRank}`
+                      ? `▲ ${mover.movement} to No. ${mover.currentRank}`
                       : 'Opening week'}
-                  </span>
-                </div>
-
-                <div>
-                  <small>Best College Team</small>
-                  <b>{bestTeam?.school || 'â'}</b>
-                  <span>
-                    {bestTeam
-                      ? `${bestTeam.fantasyPoints} pts Â· ${signed(bestTeam.pointDifferential)}`
-                      : 'No completed games'}
                   </span>
                 </div>
               </div>
