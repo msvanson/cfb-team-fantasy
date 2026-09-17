@@ -188,6 +188,48 @@ export function AutomationHealthCenter({
       setRunningJob('');
     }
   }
+    async function sendTestAlert() {
+    const jobKey = 'test_alert';
+
+    setRunningJob(jobKey);
+    setActionMessage(
+      jobKey,
+      'Sending test alert…',
+      'working'
+    );
+
+    try {
+      const response = await fetch(
+        '/api/admin/automation-alert-test',
+        {
+          method: 'POST'
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || result?.ok === false) {
+        throw new Error(
+          result?.error ||
+          'The test alert could not be sent'
+        );
+      }
+
+      setActionMessage(
+        jobKey,
+        'Test alert sent. Check your inbox.'
+      );
+    } catch (error) {
+      setActionMessage(
+        jobKey,
+        error?.message ||
+          'The test alert could not be sent',
+        'error'
+      );
+    } finally {
+      setRunningJob('');
+    }
+  }
 
   return (
     <div className="automationHealthCenter">
@@ -199,14 +241,44 @@ export function AutomationHealthCenter({
           </p>
         </div>
 
-        <button
-          className="button secondary"
-          type="button"
-          onClick={onRefresh}
-          disabled={refreshing}
-        >
-          {refreshing ? 'Refreshing…' : 'Refresh Status'}
-        </button>
+                <div className="automationHeaderActions">
+          <div className="automationHeaderButtons">
+            <button
+              className="button secondary"
+              type="button"
+              onClick={sendTestAlert}
+              disabled={Boolean(runningJob)}
+            >
+              {runningJob === 'test_alert'
+                ? 'Sending…'
+                : 'Send Test Alert'}
+            </button>
+
+            <button
+              className="button secondary"
+              type="button"
+              onClick={onRefresh}
+              disabled={
+                refreshing ||
+                Boolean(runningJob)
+              }
+            >
+              {refreshing
+                ? 'Refreshing…'
+                : 'Refresh Status'}
+            </button>
+          </div>
+
+          {actionMessages.test_alert ? (
+            <small
+              className={
+                actionMessages.test_alert.type
+              }
+            >
+              {actionMessages.test_alert.text}
+            </small>
+          ) : null}
+        </div>
       </div>
 
       <div className="automationSummaryGrid">
