@@ -1,6 +1,7 @@
 'use client';
 import { useEffect,useState } from 'react';
 import { AutomationHealthCenter } from './automation-health-center';
+import { WeeklyRecapEditor } from './weekly-recap-editor';
 export function Login(){
   const [password,setPassword]=useState('');
   const [msg,setMsg]=useState('');
@@ -389,6 +390,8 @@ export function AdminPanel({teams}){
 <div className="card"><button className="button" onClick={loadAccounts}>Load Accounts</button>{accountMsg&&<div className="muted">{accountMsg}</div>}
  {accountData?.profiles?.map(p=><div className="qaRow" key={p.user_id}><div><b>{p.username}</b><div className="muted">{p.email}</div></div><div className="accountAssign"><select value={p.owner_id||''} onChange={e=>assignAccount(p.user_id,e.target.value,p.role)}><option value="">Unassigned</option>{accountData.owners.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select><select value={p.role} onChange={e=>assignAccount(p.user_id,p.owner_id,e.target.value)}><option value="owner">Owner</option><option value="commissioner">Commissioner</option></select></div></div>)}
 </div>
+            <WeeklyRecapEditor />
+        
             <AutomationHealthCenter
       jobs={automation}
       summary={automationSummary}

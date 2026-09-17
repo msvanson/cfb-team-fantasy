@@ -2277,3 +2277,471 @@ input[type="range"] {
     text-align: left;
   }
 }
+/* Weekly recaps */
+.weeklyRecapsSection {
+  margin-top: 18px;
+}
+
+.weeklyRecapList,
+.weeklyRecapAdminList {
+  display: grid;
+  gap: 16px;
+}
+
+.weeklyRecapCard {
+  overflow: hidden;
+  padding: 0;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(37,99,235,.09),
+      transparent 42%
+    ),
+    var(--card);
+}
+
+.weeklyRecapHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 20px 20px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.weeklyRecapHeader h2 {
+  margin: 4px 0 0;
+  font-size: 22px;
+  line-height: 1.15;
+}
+
+.weeklyRecapEyebrow {
+  color: #60a5fa;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+}
+
+.weeklyRecapPublished {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.weeklyRecapNarrative {
+  margin: 0;
+  padding: 17px 20px;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.weeklyRecapHighlights,
+.weeklyRecapFacts {
+  display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 1px;
+  background: var(--line);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+
+.weeklyRecapHighlight,
+.weeklyRecapFacts > div {
+  display: flex;
+  min-width: 0;
+  min-height: 112px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 5px;
+  padding: 13px;
+  background: var(--card);
+}
+
+.weeklyRecapHighlight small,
+.weeklyRecapFacts small {
+  color: var(--muted);
+  font-size: 8px;
+  font-weight: 900;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+}
+
+.weeklyRecapHighlight > strong,
+.weeklyRecapFacts b {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.weeklyRecapHighlight > span,
+.weeklyRecapFacts span {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.weeklyRecapHighlight .ownerIdentity,
+.weeklyRecapHighlight .teamNameWithLogo {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.weeklyRecapHighlight .ownerIdentityText,
+.weeklyRecapHighlight .teamNameWithLogo > span:last-child {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.weeklyRecapHighlight .ownerIdentityText b {
+  max-width: 125px;
+  overflow: hidden;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.weeklyRecapHighlight .ownerIdentityText small {
+  font-size: 7px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.weeklyRecapStandings,
+.recapStandingsPreview {
+  padding: 14px 20px 18px;
+}
+
+.weeklyRecapStandings summary,
+.recapStandingsPreview summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.weeklyRecapStandingsList,
+.recapStandingsRows {
+  display: grid;
+  gap: 0;
+  margin-top: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.weeklyRecapStandingRow {
+  display: grid;
+  grid-template-columns: 24px minmax(0,1fr) 42px 88px;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.weeklyRecapStandingRow:last-child,
+.recapStandingsRows > div:last-child {
+  border-bottom: 0;
+}
+
+.weeklyRecapRank {
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+}
+
+.weeklyRecapStandingRow .ownerIdentity {
+  min-width: 0;
+}
+
+.weeklyRecapStandingRow .ownerIdentityText {
+  min-width: 0;
+}
+
+.weeklyRecapStandingRow .ownerIdentityText b {
+  max-width: 240px;
+  overflow: hidden;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.weeklyRecapStandingRow .ownerIdentityText small {
+  font-size: 7px;
+}
+
+.movementUp {
+  color: #22c55e;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.movementDown {
+  color: #ef4444;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.movementEven {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.weeklyRecapStandingPoints {
+  display: grid;
+  justify-items: end;
+  font-size: 9px;
+}
+
+.weeklyRecapStandingPoints small {
+  color: var(--muted);
+  font-size: 7px;
+}
+
+/* Commissioner recap editor */
+.weeklyRecapAdmin {
+  margin: 22px 0;
+}
+
+.weeklyRecapAdminTitle {
+  align-items: center;
+}
+
+.weeklyRecapAdminTitle h2 {
+  margin: 0;
+}
+
+.weeklyRecapAdminTitle .muted {
+  display: block;
+  margin-top: 3px;
+}
+
+.weeklyRecapAdminCard {
+  display: grid;
+  gap: 14px;
+}
+
+.weeklyRecapAdminCardTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.weeklyRecapAdminCardTop h3 {
+  margin: 0 0 3px;
+}
+
+.recapStatus {
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.recapStatus.published {
+  border-color: rgba(34,197,94,.45);
+  background: rgba(34,197,94,.12);
+  color: #4ade80;
+}
+
+.recapStatus.draft {
+  border-color: rgba(245,158,11,.45);
+  background: rgba(245,158,11,.12);
+  color: #fbbf24;
+}
+
+.weeklyRecapFacts {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.weeklyRecapFacts > div {
+  min-height: 90px;
+}
+
+.recapEditorField {
+  display: grid;
+  gap: 6px;
+}
+
+.recapEditorText {
+  min-height: 125px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.recapEditorField .field:disabled {
+  cursor: not-allowed;
+  opacity: .72;
+}
+
+.recapStandingsPreview {
+  padding: 0;
+}
+
+.recapStandingsRows > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+  font-size: 10px;
+}
+
+.recapStandingsRows span {
+  color: var(--muted);
+  text-align: right;
+}
+
+.weeklyRecapAdminActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.recapAdminMessage.success {
+  background: rgba(34,197,94,.13);
+  color: #bbf7d0;
+}
+
+.recapAdminMessage.error {
+  background: rgba(239,68,68,.14);
+  color: #fecaca;
+}
+
+.recapAdminMessage.working {
+  background: rgba(59,130,246,.14);
+  color: #bfdbfe;
+}
+
+@media(max-width:800px) {
+  .weeklyRecapHighlights,
+  .weeklyRecapFacts {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+}
+
+@media(max-width:640px) {
+  .weeklyRecapsSection .sectionTitle {
+    align-items: flex-start;
+  }
+
+  .weeklyRecapHeader {
+    gap: 8px;
+    padding: 15px 14px 12px;
+  }
+
+  .weeklyRecapHeader h2 {
+    font-size: 17px;
+  }
+
+  .weeklyRecapPublished {
+    max-width: 82px;
+    font-size: 7px;
+    text-align: right;
+  }
+
+  .weeklyRecapNarrative {
+    padding: 13px 14px;
+    font-size: 11px;
+    line-height: 1.55;
+  }
+
+  .weeklyRecapHighlight,
+  .weeklyRecapFacts > div {
+    min-height: 98px;
+    padding: 10px;
+  }
+
+  .weeklyRecapHighlight > strong,
+  .weeklyRecapFacts b {
+    font-size: 10px;
+  }
+
+  .weeklyRecapHighlight > span,
+  .weeklyRecapFacts span {
+    font-size: 8px;
+  }
+
+  .weeklyRecapHighlight .ownerIdentityText b {
+    max-width: 95px;
+    font-size: 9px;
+  }
+
+  .weeklyRecapHighlight .rosterAvatar-sm {
+    width: 25px;
+    height: 25px;
+  }
+
+  .weeklyRecapStandings {
+    padding: 12px 10px 14px;
+  }
+
+  .weeklyRecapStandingRow {
+    grid-template-columns: 17px minmax(0,1fr) 30px 62px;
+    gap: 5px;
+    padding: 7px 5px;
+  }
+
+  .weeklyRecapStandingRow .rosterAvatar-sm {
+    width: 23px;
+    height: 23px;
+  }
+
+  .weeklyRecapStandingRow .ownerIdentityText b {
+    max-width: 105px;
+    font-size: 8px;
+  }
+
+  .weeklyRecapStandingRow .ownerIdentityText small {
+    font-size: 6px;
+  }
+
+  .weeklyRecapStandingPoints,
+  .weeklyRecapRank,
+  .movementUp,
+  .movementDown,
+  .movementEven {
+    font-size: 8px;
+  }
+
+  .weeklyRecapAdminTitle {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .weeklyRecapAdminTitle .button {
+    width: 100%;
+  }
+
+  .weeklyRecapAdminCard {
+    padding: 12px;
+  }
+
+  .recapStandingsRows > div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .recapStandingsRows span {
+    text-align: left;
+  }
+
+  .weeklyRecapAdminActions {
+    display: grid;
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+
+  .weeklyRecapAdminActions .button:only-child {
+    grid-column: 1 / -1;
+  }
+}

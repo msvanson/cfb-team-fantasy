@@ -24,9 +24,17 @@
       "path": "/api/cron/waivers",
       "schedule": "59 3 * 9,10 2"
     },
-    {
+        {
       "path": "/api/cron/waivers",
       "schedule": "59 4 * 11,12 2"
+    },
+    {
+      "path": "/api/cron/weekly-recaps",
+      "schedule": "15 9 * * 1"
+    },
+    {
+      "path": "/api/cron/weekly-recaps",
+      "schedule": "15 10 * * 1"
     }
   ]
 }
