@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
-import { isAdminAuthenticated } from '../../../../../lib/admin-auth';
-import { sendAutomationFailureAlert } from '../../../../../lib/automation-alerts';
+import { isAdminAuthenticated } from '../../../../lib/admin-auth.js';
+import { sendAutomationFailureAlert } from '../../../../lib/automation-alerts.js';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
