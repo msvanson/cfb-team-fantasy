@@ -1,5 +1,5 @@
 'use client';
-
+import { useState } from 'react';
 function formatDate(value) {
   if (!value) return 'Not recorded yet';
 
@@ -48,6 +48,12 @@ function detailItems(run) {
     typeof value !== 'object'
   );
 }
+const ACTION_LABELS = {
+  projections: 'Refresh Projections',
+  standings_snapshot: 'Capture Snapshot',
+  weekly_odds: 'Refresh Odds',
+  waivers: 'Preview Waivers'
+};
 
 export function AutomationHealthCenter({
   jobs = [],
@@ -55,6 +61,134 @@ export function AutomationHealthCenter({
   refreshing = false,
   onRefresh
 }) {
+  const [runningJob,setRunningJob] = useState('');
+  const [actionMessages,setActionMessages] = useState({});
+
+  function setActionMessage(jobKey,text,type = 'success') {
+    setActionMessages(current => ({
+      ...current,
+      [jobKey]: { text,type }
+    }));
+  }
+
+  async function runAction(jobKey) {
+    let confirm = null;
+
+    if (jobKey === 'standings_snapshot') {
+      confirm = window.prompt(
+        'This creates an official standings snapshot used for movement arrows. Type CAPTURE to continue.'
+      );
+
+      if (confirm !== 'CAPTURE') {
+        if (confirm !== null) {
+          setActionMessage(
+            jobKey,
+            'Snapshot cancelled because the confirmation did not match.',
+            'error'
+          );
+        }
+
+        return;
+      }
+    }
+
+    if (
+      jobKey === 'weekly_odds' &&
+      !window.confirm(
+        'Refresh weekly odds now? This uses provider API requests and updates the current weekly cache.'
+      )
+    ) {
+      return;
+    }
+
+    setRunningJob(jobKey);
+    setActionMessage(jobKey,'Running…','working');
+
+    try {
+      let response;
+
+      if (jobKey === 'projections') {
+        response = await fetch(
+          '/api/admin/projections',
+          { method: 'POST' }
+        );
+      } else if (jobKey === 'standings_snapshot') {
+        response = await fetch(
+          '/api/admin/automation-run',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              jobKey,
+              confirm
+            })
+          }
+        );
+      } else if (jobKey === 'weekly_odds') {
+        response = await fetch(
+          '/api/admin/weekly-odds-test',
+          { cache: 'no-store' }
+        );
+      } else if (jobKey === 'waivers') {
+        response = await fetch(
+          '/api/admin/waiver-preview',
+          { cache: 'no-store' }
+        );
+      } else {
+        throw new Error('Unsupported automation action');
+      }
+
+      const result = await response.json();
+
+      if (!response.ok || result?.ok === false) {
+        throw new Error(
+          result?.error ||
+          'The automation action failed'
+        );
+      }
+
+      if (jobKey === 'projections') {
+        setActionMessage(
+          jobKey,
+          `Projection refresh complete${result?.mapped != null ? ` — ${result.mapped} teams updated` : ''}.`
+        );
+      } else if (jobKey === 'standings_snapshot') {
+        setActionMessage(
+          jobKey,
+          result?.skipped
+            ? result.reason
+            : `Snapshot captured${result?.rowsSaved != null ? ` — ${result.rowsSaved} owners saved` : ''}.`
+        );
+      } else if (jobKey === 'weekly_odds') {
+        setActionMessage(
+          jobKey,
+          `Odds refresh complete${result?.rowsSaved != null ? ` — ${result.rowsSaved} games saved` : ''}.`
+        );
+      } else {
+        const preview = result?.summary || {};
+
+        setActionMessage(
+          jobKey,
+          `Dry-run complete — ${preview.successful ?? 0} would succeed, ${preview.lost ?? 0} would lose priority, and ${preview.invalid ?? 0} are invalid.`
+        );
+      }
+
+      if (jobKey !== 'waivers') {
+        await onRefresh?.();
+      }
+    } catch (error) {
+      setActionMessage(
+        jobKey,
+        error?.message || 'The automation action failed',
+        'error'
+      );
+    } finally {
+      setRunningJob('');
+    }
+  }
+
   return (
     <div className="automationHealthCenter">
       <div className="automationHealthHeader">
@@ -141,8 +275,27 @@ export function AutomationHealthCenter({
               </div>
             </div>
 
-            <div className={`automationReason ${job.status}`}>
+                        <div className={`automationReason ${job.status}`}>
               {job.statusReason}
+            </div>
+
+            <div className="automationJobAction">
+              <button
+                className="button secondary"
+                type="button"
+                onClick={() => runAction(job.jobKey)}
+                disabled={Boolean(runningJob)}
+              >
+                {runningJob === job.jobKey
+                  ? 'Running…'
+                  : ACTION_LABELS[job.jobKey] || 'Run Now'}
+              </button>
+
+              {actionMessages[job.jobKey] ? (
+                <small className={actionMessages[job.jobKey].type}>
+                  {actionMessages[job.jobKey].text}
+                </small>
+              ) : null}
             </div>
 
             <details className="automationHistory">
