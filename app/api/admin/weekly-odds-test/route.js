@@ -2,6 +2,7 @@ import {NextResponse} from 'next/server';
 import {isAdminAuthenticated} from '../../../../lib/admin-auth';
 import {createClient} from '@supabase/supabase-js';
 import {currentFantasyWeek} from '../../../../lib/fantasy-weeks';
+import {runTrackedAutomation} from '../../../../lib/automation-health';
 import {
   buildMatchupModelContext,
   calculateMatchupProbability,
@@ -272,7 +273,7 @@ async function providerJson(url){
   };
 }
 
-export async function GET(req){
+async function runWeeklyOddsResponse(req){
 
   if(!await authorized(req)){
     return NextResponse.json(
@@ -1029,6 +1030,82 @@ closing_spread_updated_at:
       {
         ok:false,
         error:e?.message||String(e)
+      },
+      {status:500}
+    );
+  }
+}
+export async function GET(req){
+  if(!await authorized(req)){
+    return NextResponse.json(
+      {ok:false,error:'Unauthorized'},
+      {status:401}
+    );
+  }
+
+  const secret=process.env.CRON_SECRET||'';
+  const auth=req.headers.get('authorization')||'';
+
+  const triggerSource=
+    secret&&auth===`Bearer ${secret}`
+      ?'cron'
+      :'manual';
+
+  try{
+    const tracked=await runTrackedAutomation({
+      jobKey:'weekly_odds',
+      triggerSource,
+      task:async()=>{
+        const response=
+          await runWeeklyOddsResponse(req);
+
+        let body={};
+
+        try{
+          body=await response.clone().json();
+        }catch{
+          body={};
+        }
+
+        return{
+          ok:
+            response.ok&&
+            body?.ok!==false,
+          error:body?.error||null,
+          response,
+          body
+        };
+      },
+      summarize:result=>({
+        recordsUpdated:
+          result?.body?.rowsSaved,
+        details:{
+          mode:
+            result?.body?.mode||null,
+          externalRequestsUsed:
+            result?.body?.externalRequestsUsed??null,
+          relevantGames:
+            result?.body?.relevantGames??null,
+          freshMarketGames:
+            result?.body?.freshMarketGames??null,
+          cachedMarketGames:
+            result?.body?.cachedMarketGames??null,
+          marketGames:
+            result?.body?.marketGames??null,
+          closingCandidates:
+            result?.body?.closingCandidates??null,
+          rateLimitRemaining:
+            result?.body?.rateLimit?.remaining??null
+        }
+      })
+    });
+
+    return tracked.response;
+  }catch(error){
+    return NextResponse.json(
+      {
+        ok:false,
+        error:error?.message||String(error)
       },
       {status:500}
     );
