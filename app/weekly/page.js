@@ -1,9 +1,11 @@
 import {Nav} from '../nav';
 import {LeagueHeader} from '../league-header';
 import {OwnerIdentity} from '../owner-identity';
+import {WeeklyRecapCard} from './weekly-recap-card';
 import {
   getOwners,
-  getWeeklySnapshots
+  getWeeklySnapshots,
+  getPublishedWeeklyRecaps
 } from '../../lib/data';
 
 export const dynamic='force-dynamic';
@@ -14,9 +16,10 @@ const signed=value=>{
 };
 
 export default async function Page(){
-  const [snapshots,owners]=await Promise.all([
+    const [snapshots,owners,recaps]=await Promise.all([
     getWeeklySnapshots(),
-    getOwners()
+    getOwners(),
+    getPublishedWeeklyRecaps()
   ]);
 
   const ownerMap=new Map(
@@ -61,7 +64,24 @@ export default async function Page(){
   return <main className="shell">
     <LeagueHeader/>
     <Nav/>
+    {recaps.length?<section className="section weeklyRecapsSection">
+      <div className="sectionTitle">
+        <div>
+          <h2>Weekly Recaps</h2>
+          <span className="muted">
+            Final results and stories from each completed week
+          </span>
+        </div>
+      </div>
 
+      <div className="weeklyRecapList">
+        {recaps.map(recap=><WeeklyRecapCard
+          key={recap.id}
+          recap={recap}
+          owners={owners}
+        />)}
+      </div>
+    </section>:null}
     <section className="section weeklyPerformanceSection">
       <div className="tableWrap">
         <table className="table weeklyPerformanceTable">
