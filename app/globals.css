@@ -1798,3 +1798,373 @@ input[type="range"] {
     grid-column: 1/-1;
   }
 }
+/* Commissioner automation health center */
+
+.automationHealthCenter {
+  display: grid;
+  gap: 14px;
+  margin: 24px 0;
+}
+
+.automationHealthHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.automationHealthHeader h2,
+.automationHealthHeader p,
+.automationJob h3,
+.automationJob p {
+  margin: 0;
+}
+
+.automationHealthHeader p {
+  margin-top: 4px;
+}
+
+.automationHealthHeader .button:disabled {
+  cursor: wait;
+  opacity: .65;
+}
+
+.automationSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(4,minmax(0,1fr));
+  gap: 10px;
+}
+
+.automationSummary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 0;
+  padding: 12px 14px;
+}
+
+.automationSummary span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+}
+
+.automationSummary b {
+  font-size: 24px;
+}
+
+.automationSummary.healthy {
+  border-color: rgba(34,197,94,.55);
+}
+
+.automationSummary.attention {
+  border-color: rgba(239,68,68,.55);
+}
+
+.automationSummary.running {
+  border-color: rgba(59,130,246,.55);
+}
+
+.automationSummary.waiting {
+  border-color: rgba(148,163,184,.45);
+}
+
+.automationJobGrid {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 12px;
+}
+
+.automationJob {
+  display: grid;
+  align-content: start;
+  gap: 13px;
+  min-width: 0;
+  border-top-width: 3px;
+}
+
+.automationJob.healthy {
+  border-top-color: #22c55e;
+}
+
+.automationJob.failed {
+  border-top-color: #ef4444;
+}
+
+.automationJob.stale {
+  border-top-color: #f59e0b;
+}
+
+.automationJob.running {
+  border-top-color: #3b82f6;
+}
+
+.automationJob.pending {
+  border-top-color: #64748b;
+}
+
+.automationJobTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.automationJobTop > div {
+  min-width: 0;
+}
+
+.automationJob h3 {
+  font-size: 16px;
+}
+
+.automationJob p {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.35;
+}
+
+.automationBadge,
+.automationRunStatus {
+  flex: 0 0 auto;
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.automationBadge.healthy,
+.automationRunStatus.succeeded {
+  border-color: rgba(34,197,94,.55);
+  background: rgba(34,197,94,.12);
+  color: #86efac;
+}
+
+.automationBadge.failed,
+.automationRunStatus.failed {
+  border-color: rgba(239,68,68,.6);
+  background: rgba(239,68,68,.12);
+  color: #fca5a5;
+}
+
+.automationBadge.stale {
+  border-color: rgba(245,158,11,.6);
+  background: rgba(245,158,11,.12);
+  color: #fcd34d;
+}
+
+.automationBadge.running,
+.automationRunStatus.running {
+  border-color: rgba(59,130,246,.6);
+  background: rgba(59,130,246,.12);
+  color: #93c5fd;
+}
+
+.automationBadge.pending,
+.automationRunStatus.skipped {
+  background: rgba(148,163,184,.1);
+  color: #cbd5e1;
+}
+
+.automationSchedule {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: rgba(255,255,255,.02);
+}
+
+.automationSchedule span,
+.automationRunStats span {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.automationSchedule b {
+  font-size: 10px;
+  text-align: right;
+}
+
+.automationRunStats {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 8px;
+}
+
+.automationRunStats > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+
+.automationRunStats b {
+  overflow: hidden;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.automationReason {
+  padding: 9px 10px;
+  border-radius: 9px;
+  background: rgba(148,163,184,.08);
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+.automationReason.failed {
+  background: rgba(239,68,68,.1);
+  color: #fca5a5;
+}
+
+.automationReason.stale {
+  background: rgba(245,158,11,.1);
+  color: #fcd34d;
+}
+
+.automationHistory {
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+.automationHistory summary {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.automationHistoryList {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.automationRun {
+  display: grid;
+  gap: 7px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: rgba(255,255,255,.018);
+}
+
+.automationRunHeading,
+.automationRunMeta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.automationRunHeading {
+  justify-content: space-between;
+}
+
+.automationRunHeading b {
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.automationRunMeta span,
+.automationRunDetails span {
+  color: var(--muted);
+  font-size: 8px;
+}
+
+.automationRunMeta span:not(:last-child)::after {
+  margin-left: 7px;
+  content: '·';
+}
+
+.automationRunError {
+  overflow-wrap: anywhere;
+  color: #fca5a5;
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+.automationRunDetails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+}
+
+.automationEmpty {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 9px;
+}
+
+.automationHealthError {
+  margin-bottom: 18px;
+}
+
+@media(max-width:760px) {
+  .automationSummaryGrid {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+
+  .automationJobGrid {
+    grid-template-columns: minmax(0,1fr);
+  }
+}
+
+@media(max-width:640px) {
+  .automationHealthHeader {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .automationHealthHeader .button {
+    width: 100%;
+  }
+
+  .automationSummary {
+    padding: 10px;
+  }
+
+  .automationSummary span {
+    font-size: 8px;
+  }
+
+  .automationSummary b {
+    font-size: 20px;
+  }
+
+  .automationJobTop {
+    gap: 8px;
+  }
+
+  .automationSchedule {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .automationSchedule b {
+    text-align: left;
+  }
+
+  .automationRunStats {
+    gap: 6px;
+  }
+
+  .automationRunStats > div {
+    padding: 8px;
+  }
+}
