@@ -1,5 +1,4 @@
 import { OwnerIdentity } from '../owner-identity';
-import { TeamName } from '../team-name';
 
 function signed(value) {
   const number = Number(value || 0);
@@ -33,12 +32,9 @@ function publishedDate(value) {
 }
 
 export function WeeklyRecapCard({ recap, owners = [] }) {
-  const facts = recap?.recap_data || {};
+    const facts = recap?.recap_data || {};
   const winner = facts.winner;
-  const runnerUp = facts.runnerUp;
-  const closest = facts.closestFinish;
   const mover = facts.biggestMover;
-  const bestTeam = facts.bestTeam;
   const standings = facts.standings || [];
   const ownerMap = new Map(
     owners.map(owner => [Number(owner.id), owner])
@@ -69,37 +65,29 @@ export function WeeklyRecapCard({ recap, owners = [] }) {
         {recap.recap_text}
       </p>
 
-      <div className="weeklyRecapHighlights">
+            <div className="weeklyRecapHighlights">
         <div className="weeklyRecapHighlight weeklyRecapWinner">
           <small>Weekly Winner</small>
+
           <OwnerIdentity
             owner={winnerOwner}
             href={`/owners/${winner?.ownerId}`}
             size="sm"
             compact
           />
+
           <strong>
             {winner?.weeklyPoints ?? 0} pts
           </strong>
+
           <span>
             {signed(winner?.weeklyPointDifferential)} differential
           </span>
         </div>
 
         <div className="weeklyRecapHighlight">
-          <small>Closest Finish</small>
-          <strong>
-            {closest?.winningMargin === 0
-              ? 'Tiebreaker'
-              : `${closest?.winningMargin ?? 0}-point margin`}
-          </strong>
-          <span>
-            over {runnerUp?.rosterName || 'second place'}
-          </span>
-        </div>
-
-        <div className="weeklyRecapHighlight">
           <small>Biggest Mover</small>
+
           {moverOwner ? (
             <OwnerIdentity
               owner={moverOwner}
@@ -110,33 +98,11 @@ export function WeeklyRecapCard({ recap, owners = [] }) {
           ) : (
             <strong>Opening Week</strong>
           )}
+
           <span>
             {mover
               ? `▲ ${mover.movement} to No. ${mover.currentRank}`
               : 'No previous standings'}
-          </span>
-        </div>
-
-        <div className="weeklyRecapHighlight">
-          <small>Best College Team</small>
-          {bestTeam ? (
-            <TeamName
-              school={bestTeam.school}
-              team={{
-                id: bestTeam.teamId,
-                school: bestTeam.school,
-                abbreviation: bestTeam.abbreviation
-              }}
-              size="small"
-            />
-          ) : (
-            <strong>—</strong>
-          )}
-          <strong>
-            {bestTeam?.fantasyPoints ?? 0} fantasy pts
-          </strong>
-          <span>
-            {signed(bestTeam?.pointDifferential)} differential
           </span>
         </div>
       </div>
