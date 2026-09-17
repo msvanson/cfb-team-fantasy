@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getDueWaiverPeriods } from '../../../../lib/waiver-periods';
 import { runWaiverPeriod } from '../../../../lib/waiver-processing';
+import { runTrackedAutomation } from '../../../../lib/automation-health';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -29,32 +30,74 @@ export async function GET(req) {
     );
   }
 
-  const periods = getDueWaiverPeriods();
-
-  if (!periods.length) {
-    return NextResponse.json({
-      ok: true,
-      skipped: true,
-      reason: 'No period is due'
-    });
-  }
-
   try {
-    const results = [];
+    const result = await runTrackedAutomation({
+      jobKey: 'waivers',
+      triggerSource: 'cron',
+      task: async () => {
+        const periods = getDueWaiverPeriods();
 
-    for (const period of periods) {
-      results.push(
-        await runWaiverPeriod({
-          periodKey: period.key,
-          triggerSource: 'cron'
-        })
-      );
-    }
+        if (!periods.length) {
+          return {
+            ok: true,
+            skipped: true,
+            reason: 'No period is due',
+            results: []
+          };
+        }
 
-    return NextResponse.json({
-      ok: true,
-      results
+        const results = [];
+
+        for (const period of periods) {
+          results.push(
+            await runWaiverPeriod({
+              periodKey: period.key,
+              triggerSource: 'cron'
+            })
+          );
+        }
+
+        return {
+          ok: true,
+          results
+        };
+      },
+      summarize: result => {
+        const results = Array.isArray(result?.results)
+          ? result.results
+          : [];
+
+        return {
+          recordsUpdated: results.reduce(
+            (total, item) =>
+              total + Number(item?.successful || 0),
+            0
+          ),
+          details: {
+            skipped: result?.skipped === true,
+            reason: result?.reason || null,
+            periods: results
+              .map(item => item?.period)
+              .filter(Boolean),
+            successfulTransactions: results.reduce(
+              (total, item) =>
+                total + Number(item?.successful || 0),
+              0
+            ),
+            unsuccessfulClaims: results.reduce(
+              (total, item) =>
+                total + Number(item?.unsuccessful || 0),
+              0
+            ),
+            alreadyCompleted: results.filter(
+              item => item?.already_completed === true
+            ).length
+          }
+        };
+      }
     });
+
+    return NextResponse.json(result);
   } catch (error) {
     console.error(
       'Automatic waiver execution failed',

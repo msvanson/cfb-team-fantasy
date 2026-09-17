@@ -1,6 +1,6 @@
 'use client';
 import { useEffect,useState } from 'react';
-
+import { AutomationHealthCenter } from './automation-health-center';
 export function Login(){
   const [password,setPassword]=useState('');
   const [msg,setMsg]=useState('');
@@ -160,8 +160,12 @@ export function AdminPanel({teams}){
   const [msg,setMsg]=useState('');
   const [qa,setQa]=useState(null);
   const [sdio,setSdio]=useState(null);const [projResult,setProjResult]=useState(null);const [projectionQa,setProjectionQa]=useState(null);const [espnFutures,setEspnFutures]=useState(null);const [weeklyOddsTest,setWeeklyOddsTest]=useState(null);const [winTotalsInspect,setWinTotalsInspect]=useState(null);const [oddsFuturesDiagnostic,setOddsFuturesDiagnostic]=useState(null);
-  const [health,setHealth]=useState(null);
+    const [health,setHealth]=useState(null);
   const [audit,setAudit]=useState([]);
+  const [automation,setAutomation]=useState([]);
+  const [automationSummary,setAutomationSummary]=useState({});
+  const [healthRefreshing,setHealthRefreshing]=useState(false);
+  const [healthError,setHealthError]=useState('');
   const [teamId,setTeamId]=useState(teams[0]?.team_id||'');
   const [points,setPoints]=useState(1);
   const [eventType,setEventType]=useState('commissioner_adjustment');
@@ -170,10 +174,39 @@ export function AdminPanel({teams}){
   const [gameId,setGameId]=useState('');
   const [gameType,setGameType]=useState('ccg');
 
-  async function loadHealth(){
-    const r=await fetch('/api/admin/health',{cache:'no-store'});
-    const j=await r.json();
-    if(r.ok){setHealth(j.health);setAudit(j.audit||[])}
+    async function loadHealth(){
+    setHealthRefreshing(true);
+    setHealthError('');
+
+    try{
+      const r=await fetch(
+        '/api/admin/health',
+        {cache:'no-store'}
+      );
+
+      const j=await r.json();
+
+      if(!r.ok){
+        throw new Error(
+          j.error||
+          'Could not load automation health'
+        );
+      }
+
+      setHealth(j.health);
+      setAudit(j.audit||[]);
+      setAutomation(j.automation||[]);
+      setAutomationSummary(
+        j.automationSummary||{}
+      );
+    }catch(error){
+      setHealthError(
+        error?.message||
+        'Could not load automation health'
+      );
+    }finally{
+      setHealthRefreshing(false);
+    }
   }
 
   useEffect(()=>{loadHealth()},[]);
@@ -356,6 +389,18 @@ export function AdminPanel({teams}){
 <div className="card"><button className="button" onClick={loadAccounts}>Load Accounts</button>{accountMsg&&<div className="muted">{accountMsg}</div>}
  {accountData?.profiles?.map(p=><div className="qaRow" key={p.user_id}><div><b>{p.username}</b><div className="muted">{p.email}</div></div><div className="accountAssign"><select value={p.owner_id||''} onChange={e=>assignAccount(p.user_id,e.target.value,p.role)}><option value="">Unassigned</option>{accountData.owners.map(o=><option key={o.id} value={o.id}>{o.name}</option>)}</select><select value={p.role} onChange={e=>assignAccount(p.user_id,p.owner_id,e.target.value)}><option value="owner">Owner</option><option value="commissioner">Commissioner</option></select></div></div>)}
 </div>
+            <AutomationHealthCenter
+      jobs={automation}
+      summary={automationSummary}
+      refreshing={healthRefreshing}
+      onRefresh={loadHealth}
+    />
+
+    {healthError?(
+      <div className="notice automationHealthError">
+        {healthError}
+      </div>
+    ):null}
 <div className="sectionTitle"><h2>System Health</h2><span className="muted">Commissioner diagnostics</span></div>
     <div className="adminHealth">
       <div className="card"><div className="muted">Tier 1 Live</div><div className="kpi">{health?.liveAvailable?'Yes':'—'}</div></div>
