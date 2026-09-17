@@ -1,7 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-
+function signed(value) {
+  const number = Number(value || 0);
+  return `${number > 0 ? '+' : ''}${number}`;
+}
 function recapFacts(recap) {
   return recap?.recap_data || {};
 }
