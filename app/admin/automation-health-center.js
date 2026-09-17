@@ -52,7 +52,8 @@ const ACTION_LABELS = {
   projections: 'Refresh Projections',
   standings_snapshot: 'Capture Snapshot',
   weekly_odds: 'Refresh Odds',
-  waivers: 'Preview Waivers'
+  waivers: 'Preview Waivers',
+  weekly_recaps: 'Generate Recaps'
 };
 
 export function AutomationHealthCenter({
@@ -131,10 +132,23 @@ export function AutomationHealthCenter({
           '/api/admin/weekly-odds-test',
           { cache: 'no-store' }
         );
-      } else if (jobKey === 'waivers') {
+            } else if (jobKey === 'waivers') {
         response = await fetch(
           '/api/admin/waiver-preview',
           { cache: 'no-store' }
+        );
+      } else if (jobKey === 'weekly_recaps') {
+        response = await fetch(
+          '/api/admin/weekly-recaps',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              action: 'generate'
+            })
+          }
         );
       } else {
         throw new Error('Unsupported automation action');
@@ -161,10 +175,17 @@ export function AutomationHealthCenter({
             ? result.reason
             : `Snapshot captured${result?.rowsSaved != null ? ` — ${result.rowsSaved} owners saved` : ''}.`
         );
-      } else if (jobKey === 'weekly_odds') {
+            } else if (jobKey === 'weekly_odds') {
         setActionMessage(
           jobKey,
           `Odds refresh complete${result?.rowsSaved != null ? ` — ${result.rowsSaved} games saved` : ''}.`
+        );
+      } else if (jobKey === 'weekly_recaps') {
+        setActionMessage(
+          jobKey,
+          result.created
+            ? `Recap check complete — ${result.created} draft${result.created === 1 ? '' : 's'} created.`
+            : 'Recap check complete — all finalized weeks already have drafts.'
         );
       } else {
         const preview = result?.summary || {};
