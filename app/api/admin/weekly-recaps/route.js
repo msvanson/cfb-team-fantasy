@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { isAdminAuthenticated } from '../../../../lib/admin-auth';
 import { adminRpc } from '../../../../lib/admin-rpc';
+import { runTrackedAutomation } from '../../../../lib/automation-health';
 import {
   generateMissingWeeklyRecaps
 } from '../../../../lib/weekly-recaps';
@@ -105,34 +106,62 @@ export async function POST(request) {
   }
 
   try {
-    if (body.action === 'generate') {
-      const generated = await generateMissingWeeklyRecaps({
-        seasonId: 1,
-        supabase
+        if (body.action === 'generate') {
+      const result = await runTrackedAutomation({
+        jobKey: 'weekly_recaps',
+        triggerSource: 'manual',
+        details: {
+          requestedBy: 'commissioner'
+        },
+        task: async () => {
+          const generated = await generateMissingWeeklyRecaps({
+            seasonId: 1,
+            supabase
+          });
+          const created = generated.filter(
+            recap => recap.created
+          );
+
+          return {
+            ok: true,
+            created: created.length,
+            generated,
+            createdWeeks: created.map(
+              recap => recap.weekKey
+            ),
+            checkedWeeks: generated.map(
+              recap => recap.weekKey
+            )
+          };
+        },
+        summarize: generated => ({
+          recordsUpdated: generated?.created ?? 0,
+          details: {
+            requestedBy: 'commissioner',
+            createdWeeks: generated?.createdWeeks || [],
+            checkedWeeks: generated?.checkedWeeks || []
+          }
+        })
       });
-      const created = generated.filter(
-        result => result.created
-      );
 
       await logAction(
         'weekly_recaps_generated',
-        created.length
-          ? `Generated ${created.length} weekly recap draft${created.length === 1 ? '' : 's'}`
+        result.created
+          ? `Generated ${result.created} weekly recap draft${result.created === 1 ? '' : 's'}`
           : 'Checked weekly recap drafts; none were missing',
         {
-          createdWeeks: created.map(result => result.weekKey),
-          checkedWeeks: generated.map(result => result.weekKey)
+          createdWeeks: result.createdWeeks,
+          checkedWeeks: result.checkedWeeks
         }
       );
 
       return NextResponse.json({
         ok: true,
-        created: created.length,
-        generated,
+        created: result.created,
+        generated: result.generated,
         recaps: await loadRecaps()
       });
     }
-
     const recapId = validId(body.recapId);
 
     if (!recapId) {
